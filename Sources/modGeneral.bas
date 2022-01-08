@@ -232,6 +232,16 @@ On Error Resume Next
     ChDir App.Path
     ChDrive App.Path
     
+    ' Constantes
+    Call LoadConstants
+    DoEvents
+    
+    Call FileRequired(fileServerIni)
+    Call FileRequired(fileIntervalsIni)
+    
+    ' Cargar server.ini e inicializar
+    Call LoadSini
+    
     'Si esta activado el mysql carga componentes (Fedudok)
 #If Mysql = 1 Then
     Call CargarDB
@@ -239,27 +249,21 @@ On Error Resume Next
     '(Fedudok)
     
     Call LoadMotd
-    Call BanIpCargar
-    Call BanHD_load ' GSZ-AO
+    Call LoadBanIP
+    Call LoadBanHD ' GSZ-AO
     
     frmMain.Caption = frmMain.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
     
     ' Start loading...
     frmCargando.Show
     'Call PlayWaveAPI(App.Path & "\wav\harp3.wav")
-    
-    ' Constants & vars
-    frmCargando.cMensaje.Caption = "Cargando constantes..."
-    Call LoadConstants
-    DoEvents
-    
+        
     ' Arrays
     frmCargando.cMensaje.Caption = "Iniciando Arrays..."
     Call LoadArrays
     
-    ' Server.ini & Apuestas.dat
-    frmCargando.cMensaje.Caption = "Cargando Server.ini"
-    Call LoadSini
+    ' Apuestas.dat
+    frmCargando.cMensaje.Caption = "Cargando Apuestas.dat"
     Call CargaApuestas
     
     ' Npcs.dat
@@ -306,7 +310,8 @@ On Error Resume Next
     
     ' Internet IP
     frmCargando.cMensaje.Caption = "Buscando IP en Internet..." ' GSZ
-    frmMain.txtIP.Caption = frmMain.Inet1.OpenURL("http://ip1.dynupdate.no-ip.com:8245/")
+    frmMain.txtIP.Tag = frmMain.Inet1.OpenURL("http://ip1.dynupdate.no-ip.com:8245/")
+    frmMain.txtIP.Caption = "Doble Click"
     DoEvents
     If frmMain.txtIP.Caption = vbNullString Then frmMain.txtIP.Caption = "N/A"
 
@@ -361,19 +366,14 @@ On Error Resume Next
     LastBackup = Format$(Now, "Short Time")
     Minutos = Format$(Now, "Short Time")
     
-    ' Paths
-    IniPath = App.Path & "\"
-    If dir(App.Path & "\Dats", vbDirectory) <> "" Then
-        DatPath = App.Path & "\Dats\"
-    Else
-        If dir(IniPath & ".\resources\Dats", vbDirectory) <> "" Then
-            DatPath = IniPath & ".\resources\Dats"
-        Else
-            MsgBox "Se requiere una carpeta Dats válida"
-            End
-        End If
-    End If
-    CharPath = App.Path & "\Charfile\"
+    ' Directorios
+    pathServer = ValidDirectory(App.Path & "\")
+    pathLogs = ValidDirectory(pathServer & "Logs\")
+    pathChars = ValidDirectory(pathServer & "Charfiles\")
+    pathDats = ValidDirectory(pathServer & "Dats\")
+    pathGuilds = ValidDirectory(pathServer & "Guilds\")
+    pathMaps = ValidDirectory(pathServer & "Maps\")
+    pathMapsSave = ValidDirectory(pathServer & "MapsSave\")
     
     ' Skills by level
     LevelSkill(1).LevelValue = 3
@@ -576,11 +576,11 @@ On Error Resume Next
     
 #If UsarQueSocket = 1 Then
     
-    If LastSockListen >= 0 Then Call apiclosesocket(LastSockListen) 'Cierra el socket de escucha
+    If lastSockListen >= 0 Then Call apiclosesocket(lastSockListen) 'Cierra el socket de escucha
     Call IniciaWsApi(frmMain.hWnd)
-    SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
-    If SockListen <> -1 Then
-        Call WriteVar(IniPath & "Server.ini", "CONEXION", "LastSockListen", SockListen) ' Guarda el socket escuchando
+    sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+    If sockListen <> -1 Then
+        Call WriteVar(pathServer & fileServerIni, "CONEXION", "LastSockListen", sockListen) ' Guarda el socket escuchando
     Else
         MsgBox "Ha ocurrido un error al iniciar el socket del Servidor.", vbCritical + vbOKOnly
     End If
@@ -632,46 +632,6 @@ Private Sub LogServerStartTime()
 
 End Sub
 
-Function FileExist(ByVal File As String, Optional FileType As VbFileAttribute = vbNormal) As Boolean
-'*****************************************************************
-'Se fija si existe el archivo
-'*****************************************************************
-
-    FileExist = LenB(dir$(File, FileType)) <> 0
-End Function
-
-Function ReadField(ByVal Pos As Integer, ByRef Text As String, ByVal SepASCII As Byte) As String
-'*****************************************************************
-'Gets a field from a string
-'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modify Date: 16/03/2012 - ^[GS]^
-'Gets a field from a delimited string
-'*****************************************************************
-
-    Dim i As Long
-    Dim lastPos As Long
-    Dim CurrentPos As Long
-    Dim delimiter As String * 1
-    
-    delimiter = Chr$(SepASCII)
-    
-    For i = 1 To Pos
-        lastPos = CurrentPos
-        CurrentPos = InStr(lastPos + 1, Text, delimiter, vbBinaryCompare)
-    Next i
-    
-    If lastPos = 0 And Pos <> 1 Then ' GSZAO, fix
-        ReadField = vbNullString
-        Exit Function
-    End If
-    
-    If CurrentPos = 0 Then
-        ReadField = mid$(Text, lastPos + 1, Len(Text) - lastPos)
-    Else
-        ReadField = mid$(Text, lastPos + 1, CurrentPos - lastPos - 1)
-    End If
-    
-End Function
 
 Function MapaValido(ByVal Map As Integer) As Boolean
 '***************************************************
@@ -1086,10 +1046,10 @@ On Error Resume Next
 #ElseIf UsarQueSocket = 1 Then
 
     'Cierra el socket de escucha
-    If SockListen >= 0 Then Call apiclosesocket(SockListen)
+    If sockListen >= 0 Then Call apiclosesocket(sockListen)
     
     'Inicia el socket de escucha
-    SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+    sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
 
 #ElseIf UsarQueSocket = 2 Then
 
@@ -1712,7 +1672,9 @@ Public Sub CargaNpcsDat()
 '***************************************************
 
     Dim npcfile As String
-    npcfile = DatPath & "NPCs.dat"
+    npcfile = pathDats & "NPCs.dat"
+    Call FileRequired(npcfile)
+    
     Set LeerNPCs = New clsIniManager
     
     Call LeerNPCs.Initialize(npcfile)
@@ -1811,7 +1773,7 @@ Sub GuardarUsuarios()
     Dim i As Integer
     For i = 1 To LastUser
         If UserList(i).flags.UserLogged Then
-            Call SaveUser(i, CharPath & UCase$(UserList(i).Name) & ".chr", False)
+            Call SaveUser(i, pathChars & UCase$(UserList(i).Name) & ".chr", False)
         End If
     Next i
     

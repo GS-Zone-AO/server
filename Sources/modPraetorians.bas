@@ -87,7 +87,7 @@ Public PretorianDatNumbers() As Integer
 Public Sub LoadPretorianData()
 
     Dim PretorianDat As String
-    PretorianDat = DatPath & "Pretorianos.dat"
+    PretorianDat = pathDats & "Pretorianos.dat"
 
     Dim NroCombinaciones As Integer
     NroCombinaciones = val(GetVar(PretorianDat, "MAIN", "Combinaciones"))

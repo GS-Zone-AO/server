@@ -56,7 +56,7 @@ Public Sub UserConnected(ByVal UserIndex As Integer)
 '***************************************************
 
     'A new user connected, load it's trainning time count
-    trainningInfo(UserIndex).trainningTime = val(GetVar(CharPath & UCase$(UserList(UserIndex).Name) & ".chr", "RESEARCH", "TrainningTime", 30))
+    trainningInfo(UserIndex).trainningTime = val(GetVar(pathChars & UCase$(UserList(UserIndex).Name) & ".chr", "RESEARCH", "TrainningTime", 30))
     
     trainningInfo(UserIndex).startTick = (GetTickCount() And &H7FFFFFFF)
 End Sub
@@ -74,7 +74,7 @@ Public Sub UserDisconnected(ByVal UserIndex As Integer)
         .startTick = (GetTickCount() And &H7FFFFFFF)
         
         'Store info in char file
-        Call WriteVar(CharPath & UCase$(UserList(UserIndex).Name) & ".chr", "RESEARCH", "TrainningTime", CStr(.trainningTime))
+        Call WriteVar(pathChars & UCase$(UserList(UserIndex).Name) & ".chr", "RESEARCH", "TrainningTime", CStr(.trainningTime))
     End With
 End Sub
 

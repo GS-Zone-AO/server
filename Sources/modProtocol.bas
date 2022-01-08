@@ -7628,13 +7628,13 @@ On Error GoTo ErrHandler
             If (EsAdmin(Name) Or EsDios(Name) Or EsSemiDios(Name) Or EsConsejero(Name) Or EsRolesMaster(Name)) And (UserList(UserIndex).flags.Privilegios And PlayerType.User) Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje264) '"No puedes ver las penas de los administradores."
             Else
-                If FileExist(CharPath & Name & ".chr", vbNormal) Then
-                    Count = val(GetVar(CharPath & Name & ".chr", "PENAS", "Cant"))
+                If FileExist(pathChars & Name & ".chr", vbNormal) Then
+                    Count = val(GetVar(pathChars & Name & ".chr", "PENAS", "Cant"))
                     If Count = 0 Then
                         Call WriteMensajes(UserIndex, eMensajes.Mensaje265) '"Sin prontuario.."
                     Else
                         While Count > 0
-                            Call WriteConsoleMsg(UserIndex, Count & " - " & GetVar(CharPath & Name & ".chr", "PENAS", "P" & Count), FontTypeNames.FONTTYPE_INFO)
+                            Call WriteConsoleMsg(UserIndex, Count & " - " & GetVar(pathChars & Name & ".chr", "PENAS", "P" & Count), FontTypeNames.FONTTYPE_INFO)
                             Count = Count - 1
                         Wend
                     End If
@@ -7693,12 +7693,12 @@ On Error GoTo ErrHandler
         If LenB(newPass) = 0 Then
             Call WriteMensajes(UserIndex, eMensajes.Mensaje266) '"Debes especificar una contraseña nueva, inténtalo de nuevo."
         Else
-            oldPass2 = UCase$(GetVar(CharPath & UserList(UserIndex).Name & ".chr", "INIT", "Password"))
+            oldPass2 = UCase$(GetVar(pathChars & UserList(UserIndex).Name & ".chr", "INIT", "Password"))
             
             If oldPass2 <> oldPass Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje267) '"La contraseña actual proporcionada no es correcta. La contraseña no ha sido cambiada, inténtalo de nuevo."
             Else
-                Call WriteVar(CharPath & UserList(UserIndex).Name & ".chr", "INIT", "Password", newPass)
+                Call WriteVar(pathChars & UserList(UserIndex).Name & ".chr", "INIT", "Password", newPass)
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje268) '"La contraseña fue cambiada con éxito."
             End If
         End If
@@ -7785,18 +7785,18 @@ Private Sub HandleGamble(ByVal UserIndex As Integer)
                 Call WriteChatOverHead(UserIndex, "¡Felicidades! Has ganado " & CStr(Amount) & " monedas de oro.", Npclist(.flags.TargetNPC).Char.CharIndex, vbWhite)
                 
                 Apuestas.Perdidas = Apuestas.Perdidas + Amount
-                Call WriteVar(DatPath & "apuestas.dat", "Main", "Perdidas", CStr(Apuestas.Perdidas))
+                Call WriteVar(pathDats & "apuestas.dat", "Main", "Perdidas", CStr(Apuestas.Perdidas))
             Else
                 .Stats.GLD = .Stats.GLD - Amount
                 Call WriteChatOverHead(UserIndex, "Lo siento, has perdido " & CStr(Amount) & " monedas de oro.", Npclist(.flags.TargetNPC).Char.CharIndex, vbWhite)
                 
                 Apuestas.Ganancias = Apuestas.Ganancias + Amount
-                Call WriteVar(DatPath & "apuestas.dat", "Main", "Ganancias", CStr(Apuestas.Ganancias))
+                Call WriteVar(pathDats & "apuestas.dat", "Main", "Ganancias", CStr(Apuestas.Ganancias))
             End If
             
             Apuestas.Jugadas = Apuestas.Jugadas + 1
             
-            Call WriteVar(DatPath & "apuestas.dat", "Main", "Jugadas", CStr(Apuestas.Jugadas))
+            Call WriteVar(pathDats & "apuestas.dat", "Main", "Jugadas", CStr(Apuestas.Jugadas))
             
             Call WriteUpdateGold(UserIndex)
         End If
@@ -8814,12 +8814,12 @@ On Error GoTo ErrHandler
             tUser = NameIndex(UserName)
             If tUser <= 0 Then
             
-                If FileExist(CharPath & UserName & ".chr", vbNormal) Then
+                If FileExist(pathChars & UserName & ".chr", vbNormal) Then
                     Dim CharPrivs As PlayerType
                     CharPrivs = GetCharPrivs(UserName)
                     
                     If (CharPrivs And (PlayerType.User Or PlayerType.Consejero Or PlayerType.SemiDios)) <> 0 Or ((CharPrivs And (PlayerType.Dios Or PlayerType.Admin) <> 0) And (.flags.Privilegios And (PlayerType.Dios Or PlayerType.Admin)) <> 0) Then
-                        miPos = GetVar(CharPath & UserName & ".chr", "INIT", "POSITION")
+                        miPos = GetVar(pathChars & UserName & ".chr", "INIT", "POSITION")
                         Call WriteConsoleMsg(UserIndex, "Ubicación  " & UserName & " (Offline): " & ReadField(1, miPos, 45) & ", " & ReadField(2, miPos, 45) & ", " & ReadField(3, miPos, 45) & ".", FontTypeNames.FONTTYPE_INFO)
                     End If
                 Else
@@ -9043,10 +9043,10 @@ On Error GoTo ErrHandler
                         End If
                         #If Mysql = 0 Then ' GSZAO
                             '¿Existe el personaje?
-                            If Not FileExist(CharPath & UCase$(UserName) & ".chr", vbNormal) Then
+                            If Not FileExist(pathChars & UCase$(UserName) & ".chr", vbNormal) Then
                                 Call WriteMensajes(UserIndex, eMensajes.Mensaje183) '"Usuario inexistente."
                             Else
-                                Call WriteVar(CharPath & UCase$(UserName) & ".chr", "INIT", "Position", Map & "-" & X & "-" & Y)
+                                Call WriteVar(pathChars & UCase$(UserName) & ".chr", "INIT", "Position", Map & "-" & X & "-" & Y)
                             End If
                         #Else ' GSZAO
                             '¿Existe el personaje?
@@ -9654,10 +9654,10 @@ On Error GoTo ErrHandler
                             UserName = Replace(UserName, "/", "")
                         End If
                         
-                        If FileExist(CharPath & UserName & ".chr", vbNormal) Then
-                            Count = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
-                            Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", Count + 1)
-                            Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": CARCEL " & jailTime & "m, MOTIVO: " & LCase$(Reason) & " " & Date & " " & time)
+                        If FileExist(pathChars & UserName & ".chr", vbNormal) Then
+                            Count = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
+                            Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", Count + 1)
+                            Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": CARCEL " & jailTime & "m, MOTIVO: " & LCase$(Reason) & " " & Date & " " & time)
                         End If
                         
                         Call Encarcelar(tUser, jailTime, .Name)
@@ -9775,10 +9775,10 @@ On Error GoTo ErrHandler
                             UserName = Replace(UserName, "/", "")
                     End If
                     
-                    If FileExist(CharPath & UserName & ".chr", vbNormal) Then
-                        Count = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
-                        Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", Count + 1)
-                        Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": ADVERTENCIA por: " & LCase$(Reason) & " " & Date & " " & time)
+                    If FileExist(pathChars & UserName & ".chr", vbNormal) Then
+                        Count = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
+                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", Count + 1)
+                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": ADVERTENCIA por: " & LCase$(Reason) & " " & Date & " " & time)
                         
                         Call WriteConsoleMsg(UserIndex, "Has advertido a " & UCase$(UserName) & ".", FontTypeNames.FONTTYPE_INFO)
                         Call LogGM(.Name, " advirtio a " & UserName)
@@ -9834,7 +9834,7 @@ On Error GoTo ErrHandler
         Dim LoopC As Byte
         Dim CommandString As String
         Dim N As Byte
-        Dim UserCharPath As String
+        Dim UserpathChars As String
         Dim Var As Long
         
         
@@ -9899,8 +9899,8 @@ On Error GoTo ErrHandler
         End If
 
         If valido Then
-            UserCharPath = CharPath & UserName & ".chr"
-            If tUser <= 0 And Not FileExist(UserCharPath) Then
+            UserpathChars = pathChars & UserName & ".chr"
+            If tUser <= 0 And Not FileExist(UserpathChars) Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje295) '"Estás intentando editar un usuario inexistente."
                 Call LogGM(.Name, "Intentó editar un usuario inexistente.")
             Else
@@ -9911,7 +9911,7 @@ On Error GoTo ErrHandler
                     Case eEditOptions.eo_Gold
                         If val(Arg1) <= MAX_ORO_EDIT Then
                             If tUser <= 0 Then ' Esta offline?
-                                Call WriteVar(UserCharPath, "STATS", "GLD", val(Arg1))
+                                Call WriteVar(UserpathChars, "STATS", "GLD", val(Arg1))
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).Stats.GLD = val(Arg1)
@@ -9930,8 +9930,8 @@ On Error GoTo ErrHandler
                         End If
                         
                         If tUser <= 0 Then ' Offline
-                            Var = GetVar(UserCharPath, "STATS", "EXP")
-                            Call WriteVar(UserCharPath, "STATS", "EXP", Var + val(Arg1))
+                            Var = GetVar(UserpathChars, "STATS", "EXP")
+                            Call WriteVar(UserpathChars, "STATS", "EXP", Var + val(Arg1))
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.Exp = UserList(tUser).Stats.Exp + val(Arg1)
@@ -9944,7 +9944,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_Body
                         If tUser <= 0 Then
-                            Call WriteVar(UserCharPath, "INIT", "Body", Arg1)
+                            Call WriteVar(UserpathChars, "INIT", "Body", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else
                             Call ChangeUserChar(tUser, val(Arg1), UserList(tUser).Char.Head, UserList(tUser).Char.heading, UserList(tUser).Char.WeaponAnim, UserList(tUser).Char.ShieldAnim, UserList(tUser).Char.CascoAnim)
@@ -9955,7 +9955,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_Head
                         If tUser <= 0 Then
-                            Call WriteVar(UserCharPath, "INIT", "Head", Arg1)
+                            Call WriteVar(UserpathChars, "INIT", "Head", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else
                             Call ChangeUserChar(tUser, UserList(tUser).Char.Body, val(Arg1), UserList(tUser).Char.heading, UserList(tUser).Char.WeaponAnim, UserList(tUser).Char.ShieldAnim, UserList(tUser).Char.CascoAnim)
@@ -9968,7 +9968,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXUSERMATADOS, MAXUSERMATADOS, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "FACCIONES", "CrimMatados", Var)
+                            Call WriteVar(UserpathChars, "FACCIONES", "CrimMatados", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).fAccion.CriminalesMatados = Var
@@ -9981,7 +9981,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXUSERMATADOS, MAXUSERMATADOS, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "FACCIONES", "CiudMatados", Var)
+                            Call WriteVar(UserpathChars, "FACCIONES", "CiudMatados", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).fAccion.CiudadanosMatados = Var
@@ -10001,7 +10001,7 @@ On Error GoTo ErrHandler
                             
                             Dim GI As Integer
                             If tUser <= 0 Then
-                                GI = GetVar(UserCharPath, "GUILD", "GUILDINDEX")
+                                GI = GetVar(UserpathChars, "GUILD", "GUILDINDEX")
                             Else
                                 GI = UserList(tUser).GuildIndex
                             End If
@@ -10019,7 +10019,7 @@ On Error GoTo ErrHandler
                         End If
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "STATS", "ELV", val(Arg1))
+                            Call WriteVar(UserpathChars, "STATS", "ELV", val(Arg1))
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.ELV = val(Arg1)
@@ -10038,7 +10038,7 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje296) '"Clase desconocida. Intente nuevamente."
                         Else
                             If tUser <= 0 Then ' Offline
-                                Call WriteVar(UserCharPath, "INIT", "Clase", LoopC)
+                                Call WriteVar(UserpathChars, "INIT", "Clase", LoopC)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).clase = LoopC
@@ -10057,13 +10057,13 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje297) '"Skill Inexistente!"
                         Else
                             If tUser <= 0 Then ' Offline
-                                Call WriteVar(UserCharPath, "Skills", "SK" & LoopC, Arg2)
-                                Call WriteVar(UserCharPath, "Skills", "EXPSK" & LoopC, 0)
+                                Call WriteVar(UserpathChars, "Skills", "SK" & LoopC, Arg2)
+                                Call WriteVar(UserpathChars, "Skills", "EXPSK" & LoopC, 0)
                                 
                                 If Arg2 < MAXSKILLPOINTS Then
-                                    Call WriteVar(UserCharPath, "Skills", "ELUSK" & LoopC, ELU_SKILL_INICIAL * 1.05 ^ Arg2)
+                                    Call WriteVar(UserpathChars, "Skills", "ELUSK" & LoopC, ELU_SKILL_INICIAL * 1.05 ^ Arg2)
                                 Else
-                                    Call WriteVar(UserCharPath, "Skills", "ELUSK" & LoopC, 0)
+                                    Call WriteVar(UserpathChars, "Skills", "ELUSK" & LoopC, 0)
                                 End If
     
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
@@ -10078,7 +10078,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_SkillPointsLeft
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "STATS", "SkillPtsLibres", Arg1)
+                            Call WriteVar(UserpathChars, "STATS", "SkillPtsLibres", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.SkillPts = val(Arg1)
@@ -10091,7 +10091,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXREP, MAXREP, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "REP", "Nobles", Var)
+                            Call WriteVar(UserpathChars, "REP", "Nobles", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Reputacion.NobleRep = Var
@@ -10104,7 +10104,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXREP, MAXREP, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserCharPath, "REP", "Asesino", Var)
+                            Call WriteVar(UserpathChars, "REP", "Asesino", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Reputacion.AsesinoRep = Var
@@ -10120,7 +10120,7 @@ On Error GoTo ErrHandler
                         
                         If Sex <> 0 Then ' Es Hombre o mujer?
                             If tUser <= 0 Then ' OffLine
-                                Call WriteVar(UserCharPath, "INIT", "Genero", Sex)
+                                Call WriteVar(UserpathChars, "INIT", "Genero", Sex)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).Genero = Sex
@@ -10156,7 +10156,7 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje299) '"Raza desconocida. Intente nuevamente."
                         Else
                             If tUser <= 0 Then
-                                Call WriteVar(UserCharPath, "INIT", "Raza", raza)
+                                Call WriteVar(UserpathChars, "INIT", "Raza", raza)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else
                                 UserList(tUser).raza = raza
@@ -10174,8 +10174,8 @@ On Error GoTo ErrHandler
                             Call WriteConsoleMsg(UserIndex, "No está permitido utilizar valores mayores a " & MAX_ORO_EDIT & ".", FontTypeNames.FONTTYPE_INFO)
                         Else
                             If tUser <= 0 Then
-                                bankGold = GetVar(CharPath & UserName & ".chr", "STATS", "BANCO")
-                                Call WriteVar(UserCharPath, "STATS", "BANCO", IIf(bankGold + val(Arg1) <= 0, 0, bankGold + val(Arg1)))
+                                bankGold = GetVar(pathChars & UserName & ".chr", "STATS", "BANCO")
+                                Call WriteVar(UserpathChars, "STATS", "BANCO", IIf(bankGold + val(Arg1) <= 0, 0, bankGold + val(Arg1)))
                                 Call WriteConsoleMsg(UserIndex, "Se le ha agregado " & Arg1 & " monedas de oro a " & UserName & ".", FONTTYPE_TALK)
                             Else
                                 UserList(tUser).Stats.Banco = IIf(UserList(tUser).Stats.Banco + val(Arg1) <= 0, 0, UserList(tUser).Stats.Banco + val(Arg1))
@@ -10216,7 +10216,7 @@ On Error GoTo ErrHandler
                         If InMapBounds(Map, X, Y) Then
                             
                             If tUser <= 0 Then
-                                Call WriteVar(UserCharPath, "INIT", "POSITION", Map & "-" & X & "-" & Y)
+                                Call WriteVar(UserpathChars, "INIT", "POSITION", Map & "-" & X & "-" & Y)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else
                                 Call WarpUserChar(tUser, Map, X, Y, True, True)
@@ -10664,10 +10664,10 @@ On Error GoTo ErrHandler
                 End If
                 
                 For LoopC = 1 To NUMSKILLS
-                    message = message & "CHAR>" & SkillsNames(LoopC) & " = " & GetVar(CharPath & UserName & ".chr", "SKILLS", "SK" & LoopC) & vbCrLf
+                    message = message & "CHAR>" & SkillsNames(LoopC) & " = " & GetVar(pathChars & UserName & ".chr", "SKILLS", "SK" & LoopC) & vbCrLf
                 Next LoopC
                 
-                Call WriteConsoleMsg(UserIndex, message & "CHAR> Libres:" & GetVar(CharPath & UserName & ".chr", "STATS", "SKILLPTSLIBRES"), FontTypeNames.FONTTYPE_INFO)
+                Call WriteConsoleMsg(UserIndex, message & "CHAR> Libres:" & GetVar(pathChars & UserName & ".chr", "STATS", "SKILLPTSLIBRES"), FontTypeNames.FONTTYPE_INFO)
             Else
                 Call SendUserSkillsTxt(UserIndex, tUser)
             End If
@@ -11319,16 +11319,16 @@ On Error GoTo ErrHandler
                 UserName = Replace(UserName, "/", "")
             End If
             
-            If Not FileExist(CharPath & UserName & ".chr", vbNormal) Then
+            If Not FileExist(pathChars & UserName & ".chr", vbNormal) Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje309) '"Charfile inexistente (no use +)."
             Else
-                If (val(GetVar(CharPath & UserName & ".chr", "FLAGS", "Ban")) = 1) Then
+                If (val(GetVar(pathChars & UserName & ".chr", "FLAGS", "Ban")) = 1) Then
                     Call UnBan(UserName)
                 
                     'penas
-                    cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": UNBAN. " & Date & " " & time)
+                    cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": UNBAN. " & Date & " " & time)
                 
                     Call LogGM(.Name, "/UNBAN a " & UserName)
                     Call WriteConsoleMsg(UserIndex, UserName & " unbanned.", FontTypeNames.FONTTYPE_INFO)
@@ -12788,12 +12788,12 @@ On Error GoTo ErrHandler
         If (Not .flags.Privilegios And PlayerType.RoleMaster) <> 0 And (.flags.Privilegios And (PlayerType.Admin Or PlayerType.Dios)) <> 0 Then
             tUser = NameIndex(UserName)
             If tUser <= 0 Then
-                If FileExist(CharPath & UserName & ".chr") Then
+                If FileExist(pathChars & UserName & ".chr") Then
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje318) '"Usuario offline, echando de los consejos."
-                    Call WriteVar(CharPath & UserName & ".chr", "CONSEJO", "PERTENECE", 0)
-                    Call WriteVar(CharPath & UserName & ".chr", "CONSEJO", "PERTENECECAOS", 0)
+                    Call WriteVar(pathChars & UserName & ".chr", "CONSEJO", "PERTENECE", 0)
+                    Call WriteVar(pathChars & UserName & ".chr", "CONSEJO", "PERTENECECAOS", 0)
                 Else
-                    Call WriteConsoleMsg(UserIndex, "No se encuentra el charfile " & CharPath & UserName & ".chr", FontTypeNames.FONTTYPE_INFO)
+                    Call WriteConsoleMsg(UserIndex, "No se encuentra el charfile " & pathChars & UserName & ".chr", FontTypeNames.FONTTYPE_INFO)
                 End If
             Else
                 With UserList(tUser)
@@ -12944,8 +12944,8 @@ Private Sub HandleBannedIPReload(ByVal UserIndex As Integer)
         
         If .flags.Privilegios And (PlayerType.User Or PlayerType.Consejero Or PlayerType.SemiDios Or PlayerType.RoleMaster) Then Exit Sub
         
-        Call BanIpGuardar
-        Call BanIpCargar
+        Call SaveBanIP
+        Call LoadBanIP
     End With
 End Sub
 
@@ -13012,11 +13012,11 @@ On Error GoTo ErrHandler
                     End If
                     
                     'ponemos el flag de ban a 1
-                    Call WriteVar(CharPath & member & ".chr", "FLAGS", "Ban", "1")
+                    Call WriteVar(pathChars & member & ".chr", "FLAGS", "Ban", "1")
                     'ponemos la pena
-                    Count = val(GetVar(CharPath & member & ".chr", "PENAS", "Cant"))
-                    Call WriteVar(CharPath & member & ".chr", "PENAS", "Cant", Count + 1)
-                    Call WriteVar(CharPath & member & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": BAN AL CLAN: " & GuildName & " " & Date & " " & time)
+                    Count = val(GetVar(pathChars & member & ".chr", "PENAS", "Cant"))
+                    Call WriteVar(pathChars & member & ".chr", "PENAS", "Cant", Count + 1)
+                    Call WriteVar(pathChars & member & ".chr", "PENAS", "P" & Count + 1, LCase$(.Name) & ": BAN AL CLAN: " & GuildName & " " & Date & " " & time)
                 Next LoopC
             End If
         End If
@@ -13319,18 +13319,18 @@ On Error GoTo ErrHandler
                 Call WriteConsoleMsg(tUser, .Name & " te ha expulsado en forma definitiva de las fuerzas del caos.", FontTypeNames.FONTTYPE_FIGHT)
                 Call FlushBuffer(tUser)
                 
-                cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO de la Legión Oscura por: " & LCase$(Reason) & " " & Date & " " & time)
+                cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO de la Legión Oscura por: " & LCase$(Reason) & " " & Date & " " & time)
             Else
-                If FileExist(CharPath & UserName & ".chr") Then
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "EjercitoCaos", 0)
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "Reenlistadas", 200)
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "Extra", "Expulsado por " & .Name)
+                If FileExist(pathChars & UserName & ".chr") Then
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "EjercitoCaos", 0)
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "Reenlistadas", 200)
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "Extra", "Expulsado por " & .Name)
                     
-                    cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO de la Legión Oscura por: " & LCase$(Reason) & " " & Date & " " & time)
+                    cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO de la Legión Oscura por: " & LCase$(Reason) & " " & Date & " " & time)
                     
                     Call WriteConsoleMsg(UserIndex, UserName & " expulsado de las fuerzas del caos y prohibida la reenlistada.", FontTypeNames.FONTTYPE_INFO)
                 Else
@@ -13408,18 +13408,18 @@ On Error GoTo ErrHandler
                 Call WriteConsoleMsg(tUser, .Name & " te ha expulsado en forma definitiva de las fuerzas reales.", FontTypeNames.FONTTYPE_FIGHT)
                 Call FlushBuffer(tUser)
                 
-                cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO del Ejército Real por: " & LCase$(Reason) & " " & Date & " " & time)
+                cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO del Ejército Real por: " & LCase$(Reason) & " " & Date & " " & time)
             Else
-                If FileExist(CharPath & UserName & ".chr") Then
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "EjercitoReal", 0)
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "Reenlistadas", 200)
-                    Call WriteVar(CharPath & UserName & ".chr", "FACCIONES", "Extra", "Expulsado por " & .Name)
+                If FileExist(pathChars & UserName & ".chr") Then
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "EjercitoReal", 0)
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "Reenlistadas", 200)
+                    Call WriteVar(pathChars & UserName & ".chr", "FACCIONES", "Extra", "Expulsado por " & .Name)
                     
-                    cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO del Ejército Real por: " & LCase$(Reason) & " " & Date & " " & time)
+                    cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": EXPULSADO del Ejército Real por: " & LCase$(Reason) & " " & Date & " " & time)
                     
                     Call WriteConsoleMsg(UserIndex, UserName & " expulsado de las fuerzas reales y prohibida la reenlistada.", FontTypeNames.FONTTYPE_INFO)
                 Else
@@ -13548,10 +13548,10 @@ On Error GoTo ErrHandler
                         UserName = Replace(UserName, "/", "")
                 End If
                 
-                If FileExist(CharPath & UserName & ".chr", vbNormal) Then
-                    Call LogGM(.Name, " borro la pena: " & punishment & "-" & GetVar(CharPath & UserName & ".chr", "PENAS", "P" & punishment) & " de " & UserName & " y la cambió por: " & NewText)
+                If FileExist(pathChars & UserName & ".chr", vbNormal) Then
+                    Call LogGM(.Name, " borro la pena: " & punishment & "-" & GetVar(pathChars & UserName & ".chr", "PENAS", "P" & punishment) & " de " & UserName & " y la cambió por: " & NewText)
                     
-                    Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & punishment, LCase$(.Name) & ": <" & NewText & "> " & Date & " " & time)
+                    Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & punishment, LCase$(.Name) & ": <" & NewText & "> " & Date & " " & time)
                     
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje325) '"Pena modificada."
                 End If
@@ -13713,10 +13713,10 @@ On Error GoTo ErrHandler
             If validCheck Then
                 Call LogGM(.Name, "/LASTIP " & UserName)
                 
-                If FileExist(CharPath & UserName & ".chr", vbNormal) Then
+                If FileExist(pathChars & UserName & ".chr", vbNormal) Then
                     lista = "Las ultimas IPs con las que " & UserName & " se conectó son:"
                     For LoopC = 1 To 5
-                        lista = lista & vbCrLf & LoopC & " - " & GetVar(CharPath & UserName & ".chr", "INIT", "LastIP" & LoopC)
+                        lista = lista & vbCrLf & LoopC & " - " & GetVar(pathChars & UserName & ".chr", "INIT", "LastIP" & LoopC)
                     Next LoopC
                     Call WriteConsoleMsg(UserIndex, lista, FontTypeNames.FONTTYPE_INFO)
                 Else
@@ -13990,7 +13990,7 @@ Public Sub HandleReloadServerIni(ByVal UserIndex As Integer)
         
         If .flags.Privilegios And (PlayerType.User Or PlayerType.Consejero Or PlayerType.SemiDios Or PlayerType.RoleMaster) Then Exit Sub
         
-        Call LogGM(.Name, .Name & " ha recargado el Server.ini.")
+        Call LogGM(.Name, .Name & " ha recargado el " & fileServerIni & ".")
         
         Call LoadSini
         
@@ -14753,28 +14753,28 @@ On Error GoTo ErrHandler
                 If changeNameUI > 0 Then
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje335) '"El Pj está online, debe salir para hacer el cambio."
                 Else
-                    If Not FileExist(CharPath & UserName & ".chr") Then
+                    If Not FileExist(pathChars & UserName & ".chr") Then
                         Call WriteConsoleMsg(UserIndex, "El pj " & UserName & " es inexistente.", FontTypeNames.FONTTYPE_INFO)
                     Else
-                        GuildIndex = val(GetVar(CharPath & UserName & ".chr", "GUILD", "GUILDINDEX"))
+                        GuildIndex = val(GetVar(pathChars & UserName & ".chr", "GUILD", "GUILDINDEX"))
                         
                         If GuildIndex > 0 Then
                             Call WriteConsoleMsg(UserIndex, "El pj " & UserName & " pertenece a un clan, debe salir del mismo con /salirclan para ser transferido.", FontTypeNames.FONTTYPE_INFO)
                         Else
-                            If Not FileExist(CharPath & newName & ".chr") Then
-                                Call FileCopy(CharPath & UserName & ".chr", CharPath & UCase$(newName) & ".chr")
+                            If Not FileExist(pathChars & newName & ".chr") Then
+                                Call FileCopy(pathChars & UserName & ".chr", pathChars & UCase$(newName) & ".chr")
                                 
                                 Call WriteMensajes(UserIndex, eMensajes.Mensaje336) '"Transferencia exitosa."
                                 
-                                Call WriteVar(CharPath & UserName & ".chr", "FLAGS", "Ban", "1")
+                                Call WriteVar(pathChars & UserName & ".chr", "FLAGS", "Ban", "1")
                                 
                                 Dim cantPenas As Byte
                                 
-                                cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
+                                cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
                                 
-                                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", CStr(cantPenas + 1))
+                                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", CStr(cantPenas + 1))
                                 
-                                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & CStr(cantPenas + 1), LCase$(.Name) & ": BAN POR Cambio de nick a " & UCase$(newName) & " " & Date & " " & time)
+                                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & CStr(cantPenas + 1), LCase$(.Name) & ": BAN POR Cambio de nick a " & UCase$(newName) & " " & Date & " " & time)
                                 
                                 Call LogGM(.Name, "Ha cambiado de nombre al usuario " & UserName & ". Ahora se llama " & newName)
                             Else
@@ -14836,10 +14836,10 @@ On Error GoTo ErrHandler
             If LenB(UserName) = 0 Or LenB(newMail) = 0 Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje338) '"usar /AEMAIL <pj>-<nuevomail>"
             Else
-                If Not FileExist(CharPath & UserName & ".chr") Then
+                If Not FileExist(pathChars & UserName & ".chr") Then
                     Call WriteConsoleMsg(UserIndex, "No existe el charfile " & UserName & ".chr", FontTypeNames.FONTTYPE_INFO)
                 Else
-                    Call WriteVar(CharPath & UserName & ".chr", "CONTACTO", "Email", newMail)
+                    Call WriteVar(pathChars & UserName & ".chr", "CONTACTO", "Email", newMail)
                     Call WriteConsoleMsg(UserIndex, "Email de " & UserName & " cambiado a: " & newMail, FontTypeNames.FONTTYPE_INFO)
                 End If
                 
@@ -14900,11 +14900,11 @@ On Error GoTo ErrHandler
             If LenB(UserName) = 0 Or LenB(copyFrom) = 0 Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje339) '"usar /APASS <pjsinpass>@<pjconpass>"
             Else
-                If Not FileExist(CharPath & UserName & ".chr") Or Not FileExist(CharPath & copyFrom & ".chr") Then
+                If Not FileExist(pathChars & UserName & ".chr") Or Not FileExist(pathChars & copyFrom & ".chr") Then
                     Call WriteConsoleMsg(UserIndex, "Alguno de los PJs no existe " & UserName & "@" & copyFrom, FontTypeNames.FONTTYPE_INFO)
                 Else
-                    Password = GetVar(CharPath & copyFrom & ".chr", "INIT", "Password")
-                    Call WriteVar(CharPath & UserName & ".chr", "INIT", "Password", Password)
+                    Password = GetVar(pathChars & copyFrom & ".chr", "INIT", "Password")
+                    Call WriteVar(pathChars & UserName & ".chr", "INIT", "Password", Password)
                     
                     Call WriteConsoleMsg(UserIndex, "Password de " & UserName & " ha cambiado por la de " & copyFrom, FontTypeNames.FONTTYPE_INFO)
                 End If
@@ -15273,11 +15273,11 @@ On Error GoTo ErrHandler
             If tUser > 0 Then
                 Call ResetFacciones(tUser)
                 
-                cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": Personaje reincorporado a la facción. " & Date & " " & time)
+                cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant")) ' 0.13.5
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": Personaje reincorporado a la facción. " & Date & " " & time)
             Else
-                Char = CharPath & UserName & ".chr"
+                Char = pathChars & UserName & ".chr"
                 
                 If FileExist(Char, vbNormal) Then
                     Call WriteVar(Char, "FACCIONES", "EjercitoReal", 0)
@@ -15409,8 +15409,8 @@ On Error GoTo ErrHandler
         UserName = buffer.ReadASCIIString()
         
         If (Not .flags.Privilegios And PlayerType.RoleMaster) <> 0 And (.flags.Privilegios And (PlayerType.Admin Or PlayerType.Dios)) Or .flags.PrivEspecial Then
-            If FileExist(CharPath & UserName & ".chr") Then
-                Mail = GetVar(CharPath & UserName & ".chr", "CONTACTO", "email")
+            If FileExist(pathChars & UserName & ".chr") Then
+                Mail = GetVar(pathChars & UserName & ".chr", "CONTACTO", "email")
                 
                 Call WriteConsoleMsg(UserIndex, "Last email de " & UserName & ":" & Mail, FontTypeNames.FONTTYPE_INFO)
             End If
@@ -15522,10 +15522,10 @@ On Error GoTo ErrHandler
             
             ReDim MOTD(1 To MaxLines)
             
-            Call WriteVar(App.Path & "\Dat\Motd.ini", "INIT", "NumLines", CStr(MaxLines))
+            Call WriteVar(pathDats & "Motd.ini", "INIT", "NumLines", CStr(MaxLines))
             
             For LoopC = 1 To MaxLines
-                Call WriteVar(App.Path & "\Dat\Motd.ini", "Motd", "Line" & CStr(LoopC), auxiliaryString(LoopC - 1))
+                Call WriteVar(pathDats & "Motd.ini", "Motd", "Line" & CStr(LoopC), auxiliaryString(LoopC - 1))
                 
                 MOTD(LoopC).texto = auxiliaryString(LoopC - 1)
             Next LoopC
@@ -15656,12 +15656,12 @@ On Error GoTo ErrHandler
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje345) '"¡No puedes modificar esa información desde aquí!"
             Else
                 'Obtengo el valor según llave y clave
-                sTmp = GetVar(IniPath & "Server.ini", sLlave, sClave)
+                sTmp = GetVar(pathServer & fileServerIni, sLlave, sClave)
 
                 'Si obtengo un valor escribo en el Server.ini
                 If LenB(sTmp) Then
-                    Call WriteVar(IniPath & "Server.ini", sLlave, sClave, sValor)
-                    Call LogGM(.Name, "Modificó en Server.ini (" & sLlave & " " & sClave & ") el valor " & sTmp & " por " & sValor)
+                    Call WriteVar(pathServer & fileServerIni, sLlave, sClave, sValor)
+                    Call LogGM(.Name, "Modificó en " & fileServerIni & " (" & sLlave & " " & sClave & ") el valor " & sTmp & " por " & sValor)
                     Call WriteConsoleMsg(UserIndex, "Modificó " & sLlave & " " & sClave & " a " & sValor & ". Valor anterior " & sTmp, FontTypeNames.FONTTYPE_INFO)
                 Else
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje346) '"No existe la llave y/o clave"
@@ -15826,7 +15826,7 @@ On Error GoTo ErrHandler
             'Si hay npcs entonces enviamos la lista
             For i = 1 To QuestList(QuestIndex).RequiredNPCs
                 Call .WriteInteger(QuestList(QuestIndex).RequiredNPC(i).Amount)
-                Call .WriteASCIIString(GetVar(DatPath & "NPCs.dat", "NPC" & QuestList(QuestIndex).RequiredNPC(i).NpcIndex, "Name"))
+                Call .WriteASCIIString(GetVar(pathDats & "NPCs.dat", "NPC" & QuestList(QuestIndex).RequiredNPC(i).NpcIndex, "Name"))
                 'Si es una quest ya empezada, entonces mandamos los NPCs que mató.
                 If QuestSlot Then
                     Call .WriteInteger(UserList(UserIndex).QuestStats.Quests(QuestSlot).NPCsKilled(i))
@@ -19920,7 +19920,7 @@ On Error GoTo ErrHandler
     
         If Not (.flags.Privilegios And (PlayerType.User Or PlayerType.Consejero Or PlayerType.RoleMaster)) Then
             'Verificamos que exista el personaje
-            If Not FileExist(CharPath & UCase$(UserName) & ".chr") Then
+            If Not FileExist(pathChars & UCase$(UserName) & ".chr") Then
                 Call WriteShowMessageBox(UserIndex, "El personaje no existe")
             Else
                 'Agregamos el seguimiento
@@ -20352,7 +20352,7 @@ On Error GoTo ErrHandler
         'Remove packet ID
         Call buffer.ReadByte
         
-        Dim TempString As String, UserCharPath As String, UserName As String
+        Dim TempString As String, UserpathChars As String, UserName As String
         Dim tUser As Integer, NumWizs As Integer, WizNum As Integer
         Dim Cargo As eCargos, Accion As eAcciones
         Dim Existe As Boolean
@@ -20369,42 +20369,42 @@ On Error GoTo ErrHandler
             If Accion = eAcciones.a_Listar Then ' pide mostrar un listado
                 Select Case Cargo
                     Case eCargos.c_Dios ' dioses
-                        NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Dioses"))
+                        NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Dioses"))
                         For WizNum = 1 To NumWizs
                             If WizNum = 1 Then
-                                TempString = UCase$(GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum))
+                                TempString = UCase$(GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum))
                             Else
-                                TempString = TempString & ", " & UCase$(GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum))
+                                TempString = TempString & ", " & UCase$(GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum))
                             End If
                         Next WizNum
                         Call WriteConsoleMsg(UserIndex, "Dioses(" & NumWizs & "): " & TempString, FontTypeNames.FONTTYPE_INFO)
                     Case eCargos.c_Semidios ' semidioses
-                        NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "SemiDioses"))
+                        NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "SemiDioses"))
                         For WizNum = 1 To NumWizs
                             If WizNum = 1 Then
-                                TempString = UCase$(GetVar(IniPath & "Server.ini", "SEMIDIOSES", "SemiDios" & WizNum))
+                                TempString = UCase$(GetVar(pathServer & fileServerIni, "SEMIDIOSES", "SemiDios" & WizNum))
                             Else
-                                TempString = TempString & ", " & UCase$(GetVar(IniPath & "Server.ini", "SEMIDIOSES", "SemiDios" & WizNum))
+                                TempString = TempString & ", " & UCase$(GetVar(pathServer & fileServerIni, "SEMIDIOSES", "SemiDios" & WizNum))
                             End If
                         Next WizNum
                         Call WriteConsoleMsg(UserIndex, "Semidioses(" & NumWizs & "): " & TempString, FontTypeNames.FONTTYPE_INFO)
                     Case eCargos.c_Consejero ' consejeros
-                        NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Consejeros"))
+                        NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Consejeros"))
                         For WizNum = 1 To NumWizs
                             If WizNum = 1 Then
-                                TempString = UCase$(GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum))
+                                TempString = UCase$(GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum))
                             Else
-                                TempString = TempString & ", " & UCase$(GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum))
+                                TempString = TempString & ", " & UCase$(GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum))
                             End If
                         Next WizNum
                         Call WriteConsoleMsg(UserIndex, "Consejeros(" & NumWizs & "): " & TempString, FontTypeNames.FONTTYPE_INFO)
                     Case eCargos.c_Rolmaster ' rolesmasters
-                        NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "RolesMasters"))
+                        NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "RolesMasters"))
                         For WizNum = 1 To NumWizs
                             If WizNum = 1 Then
-                                TempString = UCase$(GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum))
+                                TempString = UCase$(GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum))
                             Else
-                                TempString = TempString & ", " & UCase$(GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum))
+                                TempString = TempString & ", " & UCase$(GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum))
                             End If
                         Next WizNum
                         Call WriteConsoleMsg(UserIndex, "Rolesmasters(" & NumWizs & "): " & TempString, FontTypeNames.FONTTYPE_INFO)
@@ -20414,72 +20414,72 @@ On Error GoTo ErrHandler
                     tUser = NameIndex(UserName) ' esta conectado :P
                 End If
                 UserName = UCase$(UserName) ' MAYUSCULAS
-                UserCharPath = CharPath & UserName & ".chr"
-                If Not FileExist(UserCharPath) Then ' no existe el usuario!
+                UserpathChars = pathChars & UserName & ".chr"
+                If Not FileExist(UserpathChars) Then ' no existe el usuario!
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje169)
                 Else
                     Select Case Accion
                         Case eAcciones.a_Agregar ' agregar
                             Select Case Cargo
                                 Case eCargos.c_Dios ' dios
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Dioses"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Dioses"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum)) Then
                                             Call WriteMensajes(UserIndex, eMensajes.Mensaje337) ' ya existe!
                                             Existe = True
                                         End If
                                     Next WizNum
                                     If Existe = False Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Dioses", NumWizs + 1)
-                                        Call WriteVar(IniPath & "Server.ini", "DIOSES", "Dios" & (NumWizs + 1), UserName)
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Dioses", NumWizs + 1)
+                                        Call WriteVar(pathServer & fileServerIni, "DIOSES", "Dios" & (NumWizs + 1), UserName)
                                         If tUser > 0 Then ' esta conectado
                                             If UserList(tUser).flags.Privilegios < PlayerType.Dios Then UserList(tUser).flags.Privilegios = PlayerType.Dios ' le doy los permisos inmediatamente, si tiene menos, ¿no? :)
                                         End If
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje448)  ' informar del exito
                                     End If
                                 Case eCargos.c_Semidios ' semidios
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "SemiDioses"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "SemiDioses"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "SEMIDIOSES", "SemiDios" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "SEMIDIOSES", "SemiDios" & WizNum)) Then
                                             Call WriteMensajes(UserIndex, eMensajes.Mensaje337) ' ya existe!
                                             Existe = True
                                         End If
                                     Next WizNum
                                     If Existe = False Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "SemiDioses", NumWizs + 1)
-                                        Call WriteVar(IniPath & "Server.ini", "SEMIDIOSES", "SemiDios" & (NumWizs + 1), UserName)
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "SemiDioses", NumWizs + 1)
+                                        Call WriteVar(pathServer & fileServerIni, "SEMIDIOSES", "SemiDios" & (NumWizs + 1), UserName)
                                         If tUser > 0 Then ' esta conectado
                                             If UserList(tUser).flags.Privilegios < PlayerType.SemiDios Then UserList(tUser).flags.Privilegios = PlayerType.SemiDios ' le doy los permisos inmediatamente, si tiene menos, ¿no? :)
                                         End If
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje448)  ' informar del exito
                                     End If
                                 Case eCargos.c_Consejero ' consejero
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Consejeros"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Consejeros"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum)) Then
                                             Call WriteMensajes(UserIndex, eMensajes.Mensaje337) ' ya existe!
                                             Existe = True
                                         End If
                                     Next WizNum
                                     If Existe = False Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Consejeros", NumWizs + 1)
-                                        Call WriteVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & (NumWizs + 1), UserName)
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Consejeros", NumWizs + 1)
+                                        Call WriteVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & (NumWizs + 1), UserName)
                                         If tUser > 0 Then ' esta conectado
                                             If UserList(tUser).flags.Privilegios < PlayerType.Consejero Then UserList(tUser).flags.Privilegios = PlayerType.Consejero ' le doy los permisos inmediatamente, si tiene menos, ¿no? :)
                                         End If
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje448)  ' informar del exito
                                     End If
                                 Case eCargos.c_Rolmaster ' rolmaster
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "RolesMasters"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "RolesMasters"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum)) Then
                                             Call WriteMensajes(UserIndex, eMensajes.Mensaje337) ' ya existe!
                                             Existe = True
                                         End If
                                     Next WizNum
                                     If Existe = False Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "RolesMasters", NumWizs + 1)
-                                        Call WriteVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & (NumWizs + 1), UserName)
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "RolesMasters", NumWizs + 1)
+                                        Call WriteVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & (NumWizs + 1), UserName)
                                         If tUser > 0 Then ' esta conectado
                                             If UserList(tUser).flags.Privilegios < PlayerType.RoleMaster Then UserList(tUser).flags.Privilegios = PlayerType.RoleMaster ' le doy los permisos inmediatamente, si tiene menos, ¿no? :)
                                         End If
@@ -20489,20 +20489,20 @@ On Error GoTo ErrHandler
                         Case eAcciones.a_Quitar ' quitar
                             Select Case Cargo
                                 Case eCargos.c_Dios ' dios
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Dioses"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Dioses"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum)) Then
                                             Existe = True ' existe!
                                             ' ahora debo mover todos los que queden uno para arriba ;)
-                                            Call WriteVar(IniPath & "Server.ini", "DIOSES", "Dios" & NumWizs, GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "DIOSES", "Dios" & NumWizs, GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum + 1))
                                         ElseIf Existe = True Then
                                             ' vamo' pa' arribaaaaaaaaahhhhhhhhhhh!!!!!!!!!!!!!!
-                                            Call WriteVar(IniPath & "Server.ini", "DIOSES", "Dios" & NumWizs, GetVar(IniPath & "Server.ini", "DIOSES", "Dios" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "DIOSES", "Dios" & NumWizs, GetVar(pathServer & fileServerIni, "DIOSES", "Dios" & WizNum + 1))
                                         End If
                                     Next WizNum
                                     If Existe = True Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Dioses", NumWizs - 1)
-                                        Call WriteVar(IniPath & "Server.ini", "DIOSES", "Dios" & NumWizs, "") ' dejo en blanco el ultimo
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Dioses", NumWizs - 1)
+                                        Call WriteVar(pathServer & fileServerIni, "DIOSES", "Dios" & NumWizs, "") ' dejo en blanco el ultimo
                                         If tUser > 0 Then ' esta conectado
                                             Call CloseSocket(tUser) ' no es que sea malo, pero lo tenemos que rajar igual XD
                                         End If
@@ -20511,20 +20511,20 @@ On Error GoTo ErrHandler
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje449)  ' no estaba desde un principio :S
                                     End If
                                 Case eCargos.c_Semidios ' semidios
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Semidioses"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Semidioses"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "SEMIDIOSES", "Dios" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "SEMIDIOSES", "Dios" & WizNum)) Then
                                             Existe = True ' existe!
                                             ' ahora debo mover todos los que queden uno para arriba ;)
-                                            Call WriteVar(IniPath & "Server.ini", "SEMIDIOSES", "Semidios" & NumWizs, GetVar(IniPath & "Server.ini", "SEMIDIOSES", "Semidios" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "SEMIDIOSES", "Semidios" & NumWizs, GetVar(pathServer & fileServerIni, "SEMIDIOSES", "Semidios" & WizNum + 1))
                                         ElseIf Existe = True Then
                                             ' vamo' pa' arribaaaaaaaaahhhhhhhhhhh!!!!!!!!!!!!!!
-                                            Call WriteVar(IniPath & "Server.ini", "SEMIDIOSES", "Semidios" & NumWizs, GetVar(IniPath & "Server.ini", "SEMIDIOSES", "Semidios" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "SEMIDIOSES", "Semidios" & NumWizs, GetVar(pathServer & fileServerIni, "SEMIDIOSES", "Semidios" & WizNum + 1))
                                         End If
                                     Next WizNum
                                     If Existe = True Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Semidioses", NumWizs - 1)
-                                        Call WriteVar(IniPath & "Server.ini", "SEMIDIOSES", "Semidios" & NumWizs, "") ' dejo en blanco el ultimo
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Semidioses", NumWizs - 1)
+                                        Call WriteVar(pathServer & fileServerIni, "SEMIDIOSES", "Semidios" & NumWizs, "") ' dejo en blanco el ultimo
                                         If tUser > 0 Then ' esta conectado
                                             Call CloseSocket(tUser) ' no es que sea malo, pero lo tenemos que rajar igual XD
                                         End If
@@ -20533,20 +20533,20 @@ On Error GoTo ErrHandler
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje449)  ' no estaba desde un principio :S
                                     End If
                                 Case eCargos.c_Consejero ' consejero
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Consejeros"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Consejeros"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum)) Then
                                             Existe = True ' existe!
                                             ' ahora debo mover todos los que queden uno para arriba ;)
-                                            Call WriteVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & NumWizs, GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & NumWizs, GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum + 1))
                                         ElseIf Existe = True Then
                                             ' vamo' pa' arribaaaaaaaaahhhhhhhhhhh!!!!!!!!!!!!!!
-                                            Call WriteVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & NumWizs, GetVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & NumWizs, GetVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & WizNum + 1))
                                         End If
                                     Next WizNum
                                     If Existe = True Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Consejeros", NumWizs - 1)
-                                        Call WriteVar(IniPath & "Server.ini", "CONSEJEROS", "Consejero" & NumWizs, "") ' dejo en blanco el ultimo
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Consejeros", NumWizs - 1)
+                                        Call WriteVar(pathServer & fileServerIni, "CONSEJEROS", "Consejero" & NumWizs, "") ' dejo en blanco el ultimo
                                         If tUser > 0 Then ' esta conectado
                                             Call CloseSocket(tUser) ' no es que sea malo, pero lo tenemos que rajar igual XD
                                         End If
@@ -20555,20 +20555,20 @@ On Error GoTo ErrHandler
                                         Call WriteMensajes(UserIndex, eMensajes.Mensaje449)  ' no estaba desde un principio :S
                                     End If
                                 Case eCargos.c_Rolmaster ' rolmaster
-                                    NumWizs = val(GetVar(IniPath & "Server.ini", "CARGOS", "Rolesmasters"))
+                                    NumWizs = val(GetVar(pathServer & fileServerIni, "CARGOS", "Rolesmasters"))
                                     For WizNum = 1 To NumWizs
-                                        If UserName = UCase$(GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum)) Then
+                                        If UserName = UCase$(GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum)) Then
                                             Existe = True ' existe!
                                             ' ahora debo mover todos los que queden uno para arriba ;)
-                                            Call WriteVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & NumWizs, GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & NumWizs, GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum + 1))
                                         ElseIf Existe = True Then
                                             ' vamo' pa' arribaaaaaaaaahhhhhhhhhhh!!!!!!!!!!!!!!
-                                            Call WriteVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & NumWizs, GetVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & WizNum + 1))
+                                            Call WriteVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & NumWizs, GetVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & WizNum + 1))
                                         End If
                                     Next WizNum
                                     If Existe = True Then
-                                        Call WriteVar(IniPath & "Server.ini", "CARGOS", "Rolesmasters", NumWizs - 1)
-                                        Call WriteVar(IniPath & "Server.ini", "ROLESMASTERS", "RM" & NumWizs, "") ' dejo en blanco el ultimo
+                                        Call WriteVar(pathServer & fileServerIni, "CARGOS", "Rolesmasters", NumWizs - 1)
+                                        Call WriteVar(pathServer & fileServerIni, "ROLESMASTERS", "RM" & NumWizs, "") ' dejo en blanco el ultimo
                                         If tUser > 0 Then ' esta conectado
                                             Call CloseSocket(tUser) ' no es que sea malo, pero lo tenemos que rajar igual XD
                                         End If

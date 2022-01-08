@@ -186,7 +186,7 @@ On Error Resume Next
     Dim ln As String, npcfile As String
     Dim i As Integer
     
-    npcfile = DatPath & "NPCs.dat"
+    npcfile = pathDats & "NPCs.dat"
      
     For i = 1 To MAX_INVENTORY_SLOTS
         ln = GetVar(npcfile, "NPC" & Npclist(NpcIndex).Numero, "Obj" & i)
@@ -294,7 +294,7 @@ Sub CargarInvent(ByVal NpcIndex As Integer)
     Dim ln As String
     Dim npcfile As String
     
-    npcfile = DatPath & "NPCs.dat"
+    npcfile = pathDats & "NPCs.dat"
     
     With Npclist(NpcIndex)
         .Invent.NroItems = val(GetVar(npcfile, "NPC" & .Numero, "NROITEMS"))

@@ -930,10 +930,10 @@ Sub SendHelp(ByVal Index As Integer)
 Dim NumHelpLines As Integer
 Dim LoopC As Integer
 
-NumHelpLines = val(GetVar(DatPath & "Help.dat", "INIT", "NumLines"))
+NumHelpLines = val(GetVar(pathDats & "Help.dat", "INIT", "NumLines"))
 
 For LoopC = 1 To NumHelpLines
-    Call WriteConsoleMsg(Index, GetVar(DatPath & "Help.dat", "Help", "Line" & LoopC), FontTypeNames.FONTTYPE_INFO)
+    Call WriteConsoleMsg(Index, GetVar(pathDats & "Help.dat", "Help", "Line" & LoopC), FontTypeNames.FONTTYPE_INFO)
 Next LoopC
 
 End Sub

@@ -92,7 +92,7 @@ Public Sub InitAreas()
     ReDim ConnGroups(1 To NumMaps) As ConnGroup
     
     For LoopC = 1 To NumMaps
-        ConnGroups(LoopC).OptValue = val(GetVar(DatPath & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour))
+        ConnGroups(LoopC).OptValue = val(GetVar(pathDats & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour))
         
         If ConnGroups(LoopC).OptValue = 0 Then ConnGroups(LoopC).OptValue = 1
         ReDim ConnGroups(LoopC).UserEntrys(1 To ConnGroups(LoopC).OptValue) As Long
@@ -116,10 +116,10 @@ Public Sub AreasOptimizacion()
         tCurHour = Fix(Hour(time) \ 3) 'A ke parte de la hora pertenece
         
         For LoopC = 1 To NumMaps
-            EntryValue = val(GetVar(DatPath & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour))
-            Call WriteVar(DatPath & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour, CInt((EntryValue + ConnGroups(LoopC).OptValue) \ 2))
+            EntryValue = val(GetVar(pathDats & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour))
+            Call WriteVar(pathDats & "AreasStats.dat", "Mapa" & LoopC, CurDay & "-" & CurHour, CInt((EntryValue + ConnGroups(LoopC).OptValue) \ 2))
             
-            ConnGroups(LoopC).OptValue = val(GetVar(DatPath & "AreasStats.dat", "Mapa" & LoopC, tCurDay & "-" & tCurHour))
+            ConnGroups(LoopC).OptValue = val(GetVar(pathDats & "AreasStats.dat", "Mapa" & LoopC, tCurDay & "-" & tCurHour))
             If ConnGroups(LoopC).OptValue = 0 Then ConnGroups(LoopC).OptValue = 1
             If ConnGroups(LoopC).OptValue >= MapInfo(LoopC).NumUsers Then ReDim Preserve ConnGroups(LoopC).UserEntrys(1 To ConnGroups(LoopC).OptValue) As Long
         Next LoopC

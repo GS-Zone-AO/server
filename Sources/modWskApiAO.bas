@@ -75,8 +75,8 @@ Public hWndMsg As Long
 ' ====================================================================================
 ' ====================================================================================
 
-Public SockListen As Long
-Public LastSockListen As Long ' GSZAO
+Public sockListen As Long
+Public lastSockListen As Long ' GSZAO
 
 
 #End If
@@ -225,7 +225,7 @@ On Error Resume Next
             
             Select Case E
                 Case FD_ACCEPT
-                    If S = SockListen Then
+                    If S = sockListen Then
                         Call EventoSockAccept(S)
                     End If
                 
@@ -260,7 +260,7 @@ On Error Resume Next
         
                 Case FD_READ
                     N = BuscaSlotSock(S)
-                    If N < 0 And S <> SockListen Then
+                    If N < 0 And S <> sockListen Then
                         'Call apiclosesocket(s)
                         Call WSApiCloseSocket(S)
                         Exit Function
@@ -299,7 +299,7 @@ On Error Resume Next
                 
                 Case FD_CLOSE
                     N = BuscaSlotSock(S)
-                    If S <> SockListen Then Call apiclosesocket(S)
+                    If S <> sockListen Then Call apiclosesocket(S)
                     
                     If N > 0 Then
                         Call BorraSlotSock(S)
@@ -548,7 +548,7 @@ Public Sub WSApiReiniciarSockets()
 #If UsarQueSocket = 1 Then
 Dim i As Long
     'Cierra el socket de escucha
-    If SockListen >= 0 Then Call apiclosesocket(SockListen)
+    If sockListen >= 0 Then Call apiclosesocket(sockListen)
     
     'Cierra todas las conexiones
     For i = 1 To iniMaxUsuarios
@@ -580,7 +580,7 @@ Dim i As Long
     Call LimpiaWsApi
     Call Sleep(100)
     Call IniciaWsApi(frmMain.hWnd)
-    SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+    sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
 
 
 #End If

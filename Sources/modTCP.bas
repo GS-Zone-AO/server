@@ -377,7 +377,7 @@ With UserList(UserIndex)
     '¿Existe el personaje? (Fedudok)
     #If Mysql = 0 Then
     
-    If FileExist(CharPath & UCase$(Name) & ".chr", vbNormal) = True Then
+    If FileExist(pathChars & UCase$(Name) & ".chr", vbNormal) = True Then
         Call WriteErrorMsg(UserIndex, "Ya existe el personaje.")
         Exit Sub
     End If
@@ -613,8 +613,8 @@ Call ResetFacciones(UserIndex)
 
 ' Guardado de personaje(Fedudok)
 #If Mysql = 0 Then
-    Call WriteVar(CharPath & UCase$(Name) & ".chr", "INIT", "Password", Password) 'grabamos el password aqui afuera, para no mantenerlo cargado en memoria
-    Call SaveUser(UserIndex, CharPath & UCase$(Name) & ".chr")
+    Call WriteVar(pathChars & UCase$(Name) & ".chr", "INIT", "Password", Password) 'grabamos el password aqui afuera, para no mantenerlo cargado en memoria
+    Call SaveUser(UserIndex, pathChars & UCase$(Name) & ".chr")
 #Else
     Call SaveUserSQL(UserIndex, True)
 #End If
@@ -1068,7 +1068,7 @@ With UserList(UserIndex)
     End If
     
     '¿Existe el personaje?
-    If Not FileExist(CharPath & UCase$(Name) & ".chr", vbNormal) Then
+    If Not FileExist(pathChars & UCase$(Name) & ".chr", vbNormal) Then
         Call WriteErrorMsg(UserIndex, "El personaje no existe.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
@@ -1076,7 +1076,7 @@ With UserList(UserIndex)
     End If
        
     '¿Es el passwd valido?
-    If UCase$(Password) <> UCase$(GetVar(CharPath & UCase$(Name) & ".chr", "INIT", "Password")) Then
+    If UCase$(Password) <> UCase$(GetVar(pathChars & UCase$(Name) & ".chr", "INIT", "Password")) Then
         Call WriteErrorMsg(UserIndex, "Password incorrecto.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
@@ -1136,7 +1136,7 @@ With UserList(UserIndex)
         'Cargamos el personaje
         Dim Leer As clsIniManager
         Set Leer = New clsIniManager
-        Call Leer.Initialize(CharPath & UCase$(Name) & ".chr")
+        Call Leer.Initialize(pathChars & UCase$(Name) & ".chr")
         'Cargamos los datos del personaje
         Call LoadUserInit(UserIndex, Leer)
         Call LoadUserStats(UserIndex, Leer)
@@ -1348,7 +1348,7 @@ With UserList(UserIndex)
     
     ' Usuario logueado
     .flags.UserLogged = True
-    Call WriteVar(CharPath & .Name & ".chr", "INIT", "Logged", "1")
+    Call WriteVar(pathChars & .Name & ".chr", "INIT", "Logged", "1")
     
     ' Usuarios en el mapa
     MapInfo(.Pos.Map).NumUsers = MapInfo(.Pos.Map).NumUsers + 1
@@ -1359,7 +1359,7 @@ With UserList(UserIndex)
         'Actualizo el frmMain. / maTih.-  |  02/03/2012
         If frmMain.Visible Then frmMain.Record.Caption = CStr(NumUsers)
         
-        Call WriteVar(IniPath & "Servidor.ini", "INIT", "Record", str(iniRecord))
+        Call WriteVar(pathServer & fileServerIni, "INIT", "Record", str(iniRecord))
     End If
         
     ' Los criminales inician con el seguro desactivado
@@ -1918,10 +1918,10 @@ With UserList(UserIndex)
     Call modStatistics.UserDisconnected(UserIndex)
     
     ' Grabamos el personaje del usuario
-    Call SaveUser(UserIndex, CharPath & Name & ".chr")
+    Call SaveUser(UserIndex, pathChars & Name & ".chr")
     
     'usado para borrar Pjs
-    Call WriteVar(CharPath & .Name & ".chr", "INIT", "Logged", "0")
+    Call WriteVar(pathChars & .Name & ".chr", "INIT", "Logged", "0")
     
     'Quitar el dialogo
     'If MapInfo(Map).NumUsers > 0 Then
@@ -1992,8 +1992,8 @@ On Error GoTo ErrHandler
     If NumUsers <= 0 Then
         Call WSApiReiniciarSockets
     Else
-       Call apiclosesocket(SockListen)
-       SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+       Call apiclosesocket(sockListen)
+       sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
     End If
 
 #ElseIf UsarQueSocket = 0 Then

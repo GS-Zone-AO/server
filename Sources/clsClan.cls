@@ -280,17 +280,17 @@ Dim OldQ    As Integer
 Dim OldQs   As String
 Dim ruta    As String
 
-ruta = CharPath & Nombre & ".chr"
+ruta = pathChars & Nombre & ".chr"
     If FileExist(ruta) Then
         Call WriteVar(ruta, "GUILD", "GUILDINDEX", p_GuildNumber)
         Call WriteVar(ruta, "GUILD", "AspiranteA", "0")
-        'CantPs = GetVar(CharPath & Nombre & ".chr", "GUILD", "ClanesParticipo")
+        'CantPs = GetVar(pathChars & Nombre & ".chr", "GUILD", "ClanesParticipo")
         'If IsNumeric(CantPs) Then
         '    CantP = CInt(CantPs)
         'Else
         '    CantP = 0
         'End If
-        'Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "ClanesParticipo", CantP + 1)
+        'Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "ClanesParticipo", CantP + 1)
         OldQs = GetVar(MEMBERSFILE, "INIT", "NroMembers")
         If IsNumeric(OldQs) Then
             OldQ = CInt(OldQs)
@@ -310,7 +310,7 @@ Dim i           As Integer
 Dim EsMiembro   As Boolean
 Dim MiembroDe   As String
 
-    If LenB(dir$(CharPath & Nombre & ".chr")) <> 0 Then
+    If LenB(dir$(pathChars & Nombre & ".chr")) <> 0 Then
         OldQ = CInt(GetVar(MEMBERSFILE, "INIT", "NroMembers"))
         i = 1
         Nombre = UCase$(Nombre)
@@ -320,7 +320,7 @@ Dim MiembroDe   As String
         EsMiembro = i <= OldQ
         
         If EsMiembro Then
-            Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "GuildIndex", vbNullString)
+            Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "GuildIndex", vbNullString)
             While i < OldQ
                 Temps = GetVar(MEMBERSFILE, "Members", "Member" & i + 1)
                 Call WriteVar(MEMBERSFILE, "Members", "Member" & i, Temps)
@@ -330,13 +330,13 @@ Dim MiembroDe   As String
             'seteo la cantidad de miembros nueva
             Call WriteVar(MEMBERSFILE, "INIT", "NroMembers", OldQ - 1)
             'lo echo a el
-            MiembroDe = GetVar(CharPath & Nombre & ".chr", "GUILD", "Miembro")
+            MiembroDe = GetVar(pathChars & Nombre & ".chr", "GUILD", "Miembro")
             If Not InStr(1, MiembroDe, p_GuildName, vbTextCompare) > 0 Then
                 If LenB(MiembroDe) <> 0 Then
                     MiembroDe = MiembroDe & ","
                 End If
                 MiembroDe = MiembroDe & p_GuildName
-                Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "Miembro", MiembroDe)
+                Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "Miembro", MiembroDe)
             End If
         End If
 
@@ -442,7 +442,7 @@ Dim OldQI   As Integer
             Call WriteVar(SOLICITUDESFILE, "SOLICITUD" & i, "Nombre", Nombre)
             Call WriteVar(SOLICITUDESFILE, "SOLICITUD" & i, "Detalle", IIf(Trim$(Peticion) = vbNullString, "Peticion vacia", Peticion))
             Call WriteVar(SOLICITUDESFILE, "INIT", "CantSolicitudes", OldQI + 1)
-            Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "ASPIRANTEA", p_GuildNumber)
+            Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "ASPIRANTEA", p_GuildNumber)
             Exit Sub
         End If
     Next i
@@ -462,14 +462,14 @@ Dim i       As Integer
     End If
     'Call WriteVar(SOLICITUDESFILE, "SOLICITUD" & NroAspirante, "Nombre", vbNullString)
     'Call WriteVar(SOLICITUDESFILE, "SOLICITUD" & NroAspirante, "Detalle", vbNullString)
-    Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "ASPIRANTEA", "0")
-    Pedidos = GetVar(CharPath & Nombre & ".chr", "GUILD", "Pedidos")
+    Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "ASPIRANTEA", "0")
+    Pedidos = GetVar(pathChars & Nombre & ".chr", "GUILD", "Pedidos")
     If Not InStr(1, Pedidos, p_GuildName, vbTextCompare) > 0 Then
         If LenB(Pedidos) <> 0 Then
             Pedidos = Pedidos & ","
         End If
         Pedidos = Pedidos & p_GuildName
-        Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "Pedidos", Pedidos)
+        Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "Pedidos", Pedidos)
     End If
     
     Call WriteVar(SOLICITUDESFILE, "INIT", "CantSolicitudes", OldQI - 1)
@@ -484,7 +484,7 @@ Dim i       As Integer
 End Sub
 
 Public Sub InformarRechazoEnChar(ByRef Nombre As String, ByRef Detalles As String)
-    Call WriteVar(CharPath & Nombre & ".chr", "GUILD", "MotivoRechazo", Detalles)
+    Call WriteVar(pathChars & Nombre & ".chr", "GUILD", "MotivoRechazo", Detalles)
 End Sub
 
 '

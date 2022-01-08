@@ -42,8 +42,8 @@ Option Explicit
 '
 'Hecha por el oso
 
-Private Const ARCHIVOMAILS = "\Logs\Votaron.dat"
-Private Const ARCHIVOCONFIG = "\Dat\Consultas.dat"
+Private Const fileVotaron = "votaron.dat"
+Private Const fileConsultas = "consultas.dat"
 
 Private pEncuestaActualNum As Integer
 Private pEncuestaActualTex As String
@@ -72,16 +72,16 @@ Public Sub LoadData()
 Dim CantOpciones As Integer
 Dim i As Integer
 
-    pEncuestaActualNum = val(GetVar(App.Path & ARCHIVOCONFIG, "INIT", "ConsultaActual"))
-    pEncuestaActualTex = GetVar(App.Path & ARCHIVOCONFIG, "INIT", "ConsultaActualTexto")
-    pNivelRequerido = GetVar(App.Path & ARCHIVOCONFIG, "INIT", "NivelRequerido")
+    pEncuestaActualNum = val(GetVar(pathDats & fileConsultas, "INIT", "ConsultaActual"))
+    pEncuestaActualTex = GetVar(pathDats & fileConsultas, "INIT", "ConsultaActualTexto")
+    pNivelRequerido = GetVar(pathDats & fileConsultas, "INIT", "NivelRequerido")
 
     If pEncuestaActualNum > 0 Then
        'cargo todas las opciones
-        CantOpciones = val(GetVar(App.Path & ARCHIVOCONFIG, "ENCUESTA" & pEncuestaActualNum, "CANTOPCIONES"))
+        CantOpciones = val(GetVar(pathDats & fileConsultas, "ENCUESTA" & pEncuestaActualNum, "CANTOPCIONES"))
         ReDim pOpciones(1 To CantOpciones) As Integer
         For i = 1 To CantOpciones
-            pOpciones(i) = val(GetVar(App.Path & ARCHIVOCONFIG, "ENCUESTA" & pEncuestaActualNum, "OPCION" & i))
+            pOpciones(i) = val(GetVar(pathDats & fileConsultas, "ENCUESTA" & pEncuestaActualNum, "OPCION" & i))
         Next i
     End If
 End Sub
@@ -101,7 +101,7 @@ On Error GoTo errorh
         Exit Function
     End If
 
-    CharFile = CharPath & UserList(UserIndex).Name & ".chr"
+    CharFile = pathChars & UserList(UserIndex).Name & ".chr"
     
     
     
@@ -111,9 +111,9 @@ On Error GoTo errorh
             If Not YaVoto Then
                 If Not MailYaVoto(UserList(UserIndex).email) Then
                     'pj apto para votar
-                    sufragio = CLng(val(GetVar(App.Path & ARCHIVOCONFIG, "RESULTADOS" & pEncuestaActualNum, "V" & opcion)))
+                    sufragio = CLng(val(GetVar(pathDats & fileConsultas, "RESULTADOS" & pEncuestaActualNum, "V" & opcion)))
                     sufragio = sufragio + 1
-                    Call WriteVar(App.Path & ARCHIVOCONFIG, "RESULTADOS" & pEncuestaActualNum, "V" & opcion, Str(sufragio))
+                    Call WriteVar(pathDats & fileConsultas, "RESULTADOS" & pEncuestaActualNum, "V" & opcion, str(sufragio))
                     doVotar = "Tu voto ha sido computado. Opcion: " & opcion
                     Call MarcarPjComoQueYaVoto(UserIndex)
                     Call MarcarMailComoQueYaVoto(UserList(UserIndex).email)
@@ -145,14 +145,14 @@ Dim i As Integer
     Call WriteConsoleMsg(UserIndex, pEncuestaActualTex, FontTypeNames.FONTTYPE_GUILD)
     Call WriteConsoleMsg(UserIndex, " Opciones de voto: ", FontTypeNames.FONTTYPE_GUILDMSG)
     For i = 1 To UBound(pOpciones)
-        Call WriteConsoleMsg(UserIndex, "(Opcion " & i & "): " & GetVar(App.Path & ARCHIVOCONFIG, "ENCUESTA" & pEncuestaActualNum, "OPCION" & i), FontTypeNames.FONTTYPE_GUILDMSG)
+        Call WriteConsoleMsg(UserIndex, "(Opcion " & i & "): " & GetVar(pathDats & fileConsultas, "ENCUESTA" & pEncuestaActualNum, "OPCION" & i), FontTypeNames.FONTTYPE_GUILDMSG)
     Next i
     Call WriteConsoleMsg(UserIndex, " Para votar una opcion, escribe /encuesta NUMERODEOPCION, por ejemplo para votar la opcion 1, escribe /encuesta 1. Tu voto no podra ser cambiado.", FontTypeNames.FONTTYPE_VENENO)
 End Function
 
 
 Private Sub MarcarPjComoQueYaVoto(ByVal UserIndex As Integer)
-    Call WriteVar(CharPath & UserList(UserIndex).Name & ".chr", "CONSULTAS", "Voto", Str(pEncuestaActualNum))
+    Call WriteVar(pathChars & UserList(UserIndex).Name & ".chr", "CONSULTAS", "Voto", str(pEncuestaActualNum))
 End Sub
 
 
@@ -164,11 +164,11 @@ Private Function MailYaVoto(ByVal email As String) As Boolean
     MailYaVoto = False
     
     ' Si no existe no voto.
-    If Not FileExist(App.Path & ARCHIVOMAILS) Then Exit Function
+    If Not FileExist(pathLogs & fileVotaron) Then Exit Function
     
     ArchN = FreeFile()
     
-    Open App.Path & ARCHIVOMAILS For Input As #ArchN
+    Open pathLogs & fileVotaron For Input As #ArchN
     
     Do While Not EOF(ArchN)
         Line Input #ArchN, Tmp
@@ -188,7 +188,7 @@ Dim ArchN As Integer
 
 ArchN = FreeFile()
 
-Open App.Path & ARCHIVOMAILS For Append As #ArchN
+Open pathLogs & fileVotaron For Append As #ArchN
 Print #ArchN, email
 
 Close #ArchN

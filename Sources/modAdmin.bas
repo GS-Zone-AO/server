@@ -154,14 +154,14 @@ On Error Resume Next
     Dim loopX As Integer
     Dim hFile As Integer
     
-    Call SendData(SendTarget.toall, 0, PrepareMessageConsoleMsg("Servidor> Iniciando WorldSave", FontTypeNames.FONTTYPE_SERVER))
+    Call SendData(SendTarget.ToAll, 0, PrepareMessageConsoleMsg("Servidor> Iniciando WorldSave", FontTypeNames.FONTTYPE_SERVER))
     
     Call ReSpawnOrigPosNpcs 'respawn de los guardias en las pos originales
     
     Dim j As Integer, k As Integer
     
     For j = 1 To NumMaps
-        If MapInfo(j).BackUp = 1 And MapInfo(loopX).MapVersion <> -1 Then k = k + 1
+        If MapInfo(j).Backup = 1 And MapInfo(loopX).MapVersion <> -1 Then k = k + 1
     Next j
     
     frmCargando.pCargar.min = 0
@@ -170,7 +170,7 @@ On Error Resume Next
     
     For loopX = 1 To NumMaps
         'DoEvents
-        If MapInfo(loopX).BackUp = 1 And MapInfo(loopX).MapVersion <> -1 Then
+        If MapInfo(loopX).Backup = 1 And MapInfo(loopX).MapVersion <> -1 Then
             ' GSZAO - Si el mapa tiene MapInfo(loopX).MapVersion = -1, es que esta fallado, por tanto "no se guarda"
             Call GrabarMapa(loopX, App.Path & "\WorldBackUp\Mapa" & loopX)
             frmCargando.pCargar.Value = frmCargando.pCargar.Value + 1
@@ -180,13 +180,13 @@ On Error Resume Next
     
     frmCargando.Visible = False
     
-    If FileExist(DatPath & "\NPCs-Backup.dat") Then Kill (DatPath & "NPCs-Backup.dat")
+    If FileExist(pathDats & "\NPCs-Backup.dat") Then Kill (pathDats & "NPCs-Backup.dat")
 
     hFile = FreeFile()
     
-    Open DatPath & "\NPCs-Backup.dat" For Output As hFile
+    Open pathDats & "\NPCs-Backup.dat" For Output As hFile
         For loopX = 1 To LastNPC
-            If Npclist(loopX).flags.BackUp = 1 Then
+            If Npclist(loopX).flags.Backup = 1 Then
                 Call BackUPnPc(loopX, hFile)
             End If
         Next loopX
@@ -194,7 +194,7 @@ On Error Resume Next
     
     Call SaveForums
     
-    Call SendData(SendTarget.toall, 0, PrepareMessageConsoleMsg("Servidor> WorldSave ha concluído.", FontTypeNames.FONTTYPE_SERVER))
+    Call SendData(SendTarget.ToAll, 0, PrepareMessageConsoleMsg("Servidor> WorldSave ha concluído.", FontTypeNames.FONTTYPE_SERVER))
 
 End Sub
 
@@ -258,8 +258,8 @@ Public Sub BorrarUsuario(ByVal UserName As String)
 '***************************************************
 
 On Error Resume Next
-    If FileExist(CharPath & UCase$(UserName) & ".chr", vbNormal) Then
-        Kill CharPath & UCase$(UserName) & ".chr"
+    If FileExist(pathChars & UCase$(UserName) & ".chr", vbNormal) Then
+        Kill pathChars & UCase$(UserName) & ".chr"
     End If
 End Sub
 
@@ -281,7 +281,7 @@ Public Function PersonajeExiste(ByVal Name As String) As Boolean
 '
 '***************************************************
 
-    PersonajeExiste = FileExist(CharPath & UCase$(Name) & ".chr", vbNormal)
+    PersonajeExiste = FileExist(pathChars & UCase$(Name) & ".chr", vbNormal)
 
 End Function
 
@@ -333,7 +333,7 @@ Public Sub BanIpAgrega(ByVal ip As String)
 
     BanIPs.Add ip
     
-    Call BanIpGuardar
+    Call SaveBanIP
 End Sub
 
 Public Function BanIpBuscar(ByVal ip As String) As Long
@@ -374,7 +374,7 @@ On Error Resume Next
     N = BanIpBuscar(ip)
     If N > 0 Then
         BanIPs.Remove N
-        BanIpGuardar
+        SaveBanIP
         BanIpQuita = True
     Else
         BanIpQuita = False
@@ -382,7 +382,7 @@ On Error Resume Next
 
 End Function
 
-Public Sub BanIpGuardar()
+Public Sub SaveBanIP()
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
@@ -393,7 +393,7 @@ Public Sub BanIpGuardar()
     Dim ArchN As Long
     Dim LoopC As Long
     
-    ArchivoBanIp = App.Path & "\Dat\BanIps.dat"
+    ArchivoBanIp = pathDats & "BanIps.dat"
     
     ArchN = FreeFile()
     Open ArchivoBanIp For Output As #ArchN
@@ -406,7 +406,7 @@ Public Sub BanIpGuardar()
 
 End Sub
 
-Public Sub BanIpCargar()
+Public Sub LoadBanIP()
 '***************************************************
 'Author: Unknownn
 'Last Modification: 10/07/2012 - ^[GS]^
@@ -417,7 +417,7 @@ Public Sub BanIpCargar()
     Dim Tmp As String
     Dim ArchivoBanIp As String
     
-    ArchivoBanIp = App.Path & "\Dat\BanIps.dat"
+    ArchivoBanIp = pathDats & "BanIps.dat"
     
     Set BanIPs = New Collection
     
@@ -478,24 +478,24 @@ Public Sub BanCharacter(ByVal bannerUserIndex As Integer, ByVal UserName As Stri
         If tUser <= 0 Then
             Call WriteMensajes(bannerUserIndex, eMensajes.Mensaje017) '"El usuario no está online."
             
-            If FileExist(CharPath & UserName & ".chr", vbNormal) Then
+            If FileExist(pathChars & UserName & ".chr", vbNormal) Then
                 userPriv = UserDarPrivilegioLevel(UserName)
                 
                 If (userPriv And rank) > (.flags.Privilegios And rank) Then
                     Call WriteMensajes(bannerUserIndex, eMensajes.Mensaje018) '"No puedes banear a al alguien de mayor jerarquía."
                 Else
-                    If GetVar(CharPath & UserName & ".chr", "FLAGS", "Ban") <> "0" Then
+                    If GetVar(pathChars & UserName & ".chr", "FLAGS", "Ban") <> "0" Then
                         Call WriteMensajes(bannerUserIndex, eMensajes.Mensaje019) '"El personaje ya se encuentra baneado."
                     Else
                         Call LogBanFromName(UserName, bannerUserIndex, Reason)
                         Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg("Servidor> " & .Name & " ha baneado a " & UserName & ".", FontTypeNames.FONTTYPE_SERVER))
                         
                         'ponemos el flag de ban a 1
-                        Call WriteVar(CharPath & UserName & ".chr", "FLAGS", "Ban", "1")
+                        Call WriteVar(pathChars & UserName & ".chr", "FLAGS", "Ban", "1")
                         'ponemos la pena
-                        cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
-                        Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                        Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
+                        cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
+                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
                         
                         If (userPriv And rank) = (.flags.Privilegios And rank) Then
                             .flags.Ban = 1
@@ -529,11 +529,11 @@ Public Sub BanCharacter(ByVal bannerUserIndex As Integer, ByVal UserName As Stri
                 Call LogGM(.Name, "BAN a " & UserName & ". Razón: " & Reason)
                 
                 'ponemos el flag de ban a 1
-                Call WriteVar(CharPath & UserName & ".chr", "FLAGS", "Ban", "1")
+                Call WriteVar(pathChars & UserName & ".chr", "FLAGS", "Ban", "1")
                 'ponemos la pena
-                cantPenas = val(GetVar(CharPath & UserName & ".chr", "PENAS", "Cant"))
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                Call WriteVar(CharPath & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
+                cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
                 
                 Call CloseSocket(tUser)
             End If
@@ -600,7 +600,7 @@ On Error Resume Next
     Dim ArchN As Long
     Dim LoopC As Long
    
-    ArchivoBanHD = App.Path & "\Dat\BanHDs.dat"
+    ArchivoBanHD = pathDats & "BanHDs.dat"
        
     ArchN = FreeFile()
     Open ArchivoBanHD For Output As #ArchN
@@ -612,15 +612,15 @@ On Error Resume Next
     Close #ArchN
    
 End Sub
-Public Sub BanHD_load()
+Public Sub LoadBanHD()
 ' GSZ-AO - Carga el listado de SerialHD's baneados
-On Error Resume Next
+On Error GoTo error
 
     Dim ArchN As Long
     Dim Tmp As String
     Dim ArchivoBanHD As String
    
-    ArchivoBanHD = App.Path & "\Dat\BanHDs.dat"
+    ArchivoBanHD = pathDats & "BanHDs.dat"
    
     Set BanHDs = New Collection
    
@@ -633,4 +633,7 @@ On Error Resume Next
     Loop
    
     Close #ArchN
+    Exit Sub
+error:
+    MsgBox "Error ejecutando LoadBanHD Err " & Err.Number & ": " & Err.description
 End Sub

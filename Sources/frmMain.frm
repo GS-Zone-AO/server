@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{48E59290-9880-11CF-9754-00AA00C00908}#1.0#0"; "msinet.ocx"
+Object = "{48E59290-9880-11CF-9754-00AA00C00908}#1.0#0"; "MSINET.Ocx"
 Begin VB.Form frmMain 
    BackColor       =   &H00101010&
    BorderStyle     =   1  'Fixed Single
@@ -305,7 +305,7 @@ Begin VB.Form frmMain
       Appearance      =   0  'Flat
       BackColor       =   &H00000000&
       BorderStyle     =   1  'Fixed Single
-      Caption         =   "N/A"
+      Caption         =   "Doble click para mostrar IP"
       BeginProperty Font 
          Name            =   "Arial"
          Size            =   18
@@ -1134,7 +1134,7 @@ If MsgBox("¡ATENCIÓN!" & vbCrLf & "El servidor se cerrará SIN GUARDAR los cambio
     For Each f In Forms
         Unload f
     Next
-    If SockListen >= 0 Then Call apiclosesocket(SockListen)
+    If sockListen >= 0 Then Call apiclosesocket(sockListen)
     Call LimpiaWsApi ' GSZAO, cerramos los sockets con seguridad...
 End If
 End Sub
@@ -1151,7 +1151,7 @@ If MsgBox("¿Está seguro que desea hacer un WorldSave, guardar los personajes y a
     Call GuardarUsuarios
     'Chauuu
     Unload frmMain
-    If SockListen >= 0 Then Call apiclosesocket(SockListen)
+    If sockListen >= 0 Then Call apiclosesocket(sockListen)
     Call LimpiaWsApi ' GSZAO, cerramos los sockets con seguridad...
 End If
 End Sub
@@ -1188,7 +1188,7 @@ If MsgBox("¿Está seguro que desea cargar el último backup del mundo?", vbYesNo, 
     
     
     #If UsarQueSocket = 1 Then
-    Call apiclosesocket(SockListen)
+    Call apiclosesocket(sockListen)
     #ElseIf UsarQueSocket = 0 Then
     frmMain.Socket1.Cleanup
     frmMain.Socket2(0).Cleanup
@@ -1214,7 +1214,7 @@ If MsgBox("¿Está seguro que desea cargar el último backup del mundo?", vbYesNo, 
     Call LoadOBJData
     
     #If UsarQueSocket = 1 Then
-    SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+    sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
     
     #ElseIf UsarQueSocket = 0 Then
     frmMain.Socket1.AddressFamily = AF_INET
@@ -1359,10 +1359,10 @@ End Sub
 Private Sub mnuReiniciarListen_Click()
 #If UsarQueSocket = 1 Then
     'Cierra el socket de escucha
-    If SockListen >= 0 Then Call apiclosesocket(SockListen)
+    If sockListen >= 0 Then Call apiclosesocket(sockListen)
     
     'Inicia el socket de escucha
-    SockListen = ListenForConnect(iniPuerto, hWndMsg, "")
+    sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
 #End If
 End Sub
 
@@ -1815,6 +1815,14 @@ Private Sub txtChat_Change()
 End Sub
 
 Private Sub txtIP_Click()
-Call Clipboard.SetText(txtIP.Caption)
-frmMain.txStatus.Text = "Dirección IP copiada."
+    Call Clipboard.SetText(txtIP.Tag)
+    frmMain.txStatus.Text = "Dirección IP copiada."
+End Sub
+
+Private Sub txtIP_DblClick()
+    If txtIP.Caption <> txtIP.Tag Then
+        txtIP.Caption = txtIP.Tag
+    Else
+        txtIP.Caption = "Doble Click"
+    End If
 End Sub

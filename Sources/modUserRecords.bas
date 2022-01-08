@@ -42,11 +42,11 @@ Dim j As Long
 
     Set Reader = New clsIniManager
     
-    If Not FileExist(DatPath & "RECORDS.DAT") Then
+    If Not FileExist(pathDats & "RECORDS.DAT") Then
         Call CreateRecordsFile
     End If
     
-    Call Reader.Initialize(DatPath & "RECORDS.DAT")
+    Call Reader.Initialize(pathDats & "RECORDS.DAT")
 
     NumRecords = Reader.GetValue("INIT", "NumRecords")
     If NumRecords Then ReDim Records(1 To NumRecords)
@@ -103,7 +103,7 @@ Dim j As Long
         End With
     Next i
     
-    Call Writer.DumpFile(DatPath & "RECORDS.DAT")
+    Call Writer.DumpFile(pathDats & "RECORDS.DAT")
 End Sub
 
 Public Sub AddRecord(ByVal UserIndex As Integer, ByVal Nickname As String, ByVal Reason As String)
@@ -173,7 +173,7 @@ Dim intFile As Integer
 
     intFile = FreeFile
     
-    Open DatPath & "RECORDS.DAT" For Output As #intFile
+    Open pathDats & "RECORDS.DAT" For Output As #intFile
         Print #intFile, "[INIT]"
         Print #intFile, "NumRecords=0"
     Close #intFile

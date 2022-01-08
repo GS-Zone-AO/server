@@ -324,7 +324,7 @@ Dim j As Integer
     Set Reader = New clsIniReader
    
     'Lo inicializamos para el archivo QUESTS.DAT
-    Call Reader.Initialize(DatPath & "QUESTS.DAT")
+    Call Reader.Initialize(pathDats & "QUESTS.DAT")
    
     'Redimensionamos el array
     NumQuests = Reader.GetValue("INIT", "NumQuests")

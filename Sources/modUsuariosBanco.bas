@@ -351,7 +351,7 @@ Dim j As Integer
 Dim CharFile As String, Tmp As String
 Dim ObjInd As Long, ObjCant As Long
 
-CharFile = CharPath & charName & ".chr"
+CharFile = pathChars & charName & ".chr"
 
 If FileExist(CharFile, vbNormal) Then
     Call WriteConsoleMsg(sendIndex, charName, FontTypeNames.FONTTYPE_INFO)

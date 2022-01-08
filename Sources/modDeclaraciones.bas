@@ -1709,21 +1709,18 @@ Public ListaAtributos(1 To NUMATRIBUTOS) As String
 
 Public iniRecord As Long
 
-'
+
+''
 'Directorios
-'
-
-''
-'Ruta base del server, en donde esta el "Servidor.ini"
-Public IniPath As String
-
-''
-'Ruta base para guardar los chars
-Public CharPath As String
-
-''
-'Ruta base para los DATs
-Public DatPath As String
+Public pathServer As String 'Ruta base del server, en donde esta el "Server.ini"
+Public pathLogs As String 'Ruta base de los Logs
+Public pathChars As String 'Ruta base para guardar los chars
+Public pathDats As String 'Ruta base para los DATs
+Public pathGuilds As String 'Ruta base para los Guilds/Clanes
+Public pathMaps As String 'Ruta base para los mapas
+Public pathMapsSave As String 'Ruta base para el worldsave de mapas
+Public Const fileServerIni As String = "server.ini"
+Public Const fileIntervalsIni As String = "intervals.ini"
 
 ''
 'Bordes del mapa

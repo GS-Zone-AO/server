@@ -35,6 +35,68 @@ Public MapPath As String
 Public MapBackupPath As String ' GSZAO
 Public MapFlagName As String ' GSZAO
 
+Function FileExist(ByVal File As String, _
+                   Optional FileType As VbFileAttribute = vbNormal) As Boolean
+    '*****************************************************************
+    'Se fija si existe el archivo
+    '*****************************************************************
+
+    FileExist = LenB(dir$(File, FileType)) <> 0
+
+End Function
+
+Function FileRequired(ByVal File As String)
+
+    If Not FileExist(File, vbArchive) Then
+        MsgBox "Se requiere el archivo de configuración " & File, vbCritical + vbOKOnly
+        End
+    End If
+
+End Function
+
+Function ValidDirectory(ByVal Path As String) As String
+
+    If Right(Path, 1) = "\" Then
+        ValidDirectory = Path
+    Else
+        ValidDirectory = Path & "\"
+    End If
+    
+End Function
+
+Function ReadField(ByVal Pos As Integer, ByRef Text As String, ByVal SepASCII As Byte) As String
+'*****************************************************************
+'Gets a field from a string
+'Author: Juan Martín Sotuyo Dodero (Maraxus)
+'Last Modify Date: 16/03/2012 - ^[GS]^
+'Gets a field from a delimited string
+'*****************************************************************
+
+    Dim i As Long
+    Dim lastPos As Long
+    Dim CurrentPos As Long
+    Dim delimiter As String * 1
+    
+    delimiter = Chr$(SepASCII)
+    
+    For i = 1 To Pos
+        lastPos = CurrentPos
+        CurrentPos = InStr(lastPos + 1, Text, delimiter, vbBinaryCompare)
+    Next i
+    
+    If lastPos = 0 And Pos <> 1 Then ' GSZAO, fix
+        ReadField = vbNullString
+        Exit Function
+    End If
+    
+    If CurrentPos = 0 Then
+        ReadField = mid$(Text, lastPos + 1, Len(Text) - lastPos)
+    Else
+        ReadField = mid$(Text, lastPos + 1, CurrentPos - lastPos - 1)
+    End If
+    
+End Function
+
 Public Sub CargarSpawnList()
 '***************************************************
 'Author: Unknownn
@@ -43,11 +105,11 @@ Public Sub CargarSpawnList()
 '***************************************************
 
     Dim N As Integer, LoopC As Integer
-    N = val(GetVar(App.Path & "\Dat\Invokar.dat", "INIT", "NumNPCs"))
+    N = val(GetVar(pathDats & "Invokar.dat", "INIT", "NumNPCs"))
     ReDim modDeclaraciones.SpawnList(N) As tCriaturasEntrenador
     For LoopC = 1 To N
-        modDeclaraciones.SpawnList(LoopC).NpcIndex = val(GetVar(App.Path & "\Dat\Invokar.dat", "LIST", "NI" & LoopC))
-        modDeclaraciones.SpawnList(LoopC).NpcName = GetVar(App.Path & "\Dat\Invokar.dat", "LIST", "NN" & LoopC)
+        modDeclaraciones.SpawnList(LoopC).NpcIndex = val(GetVar(pathDats & "Invokar.dat", "LIST", "NI" & LoopC))
+        modDeclaraciones.SpawnList(LoopC).NpcName = GetVar(pathDats & "Invokar.dat", "LIST", "NN" & LoopC)
     Next LoopC
     
 End Sub
@@ -160,7 +222,7 @@ Public Sub LoadAdministrativeUsers() ' 0.13.3
     Dim ServerIni As clsIniManager
     Set ServerIni = New clsIniManager
     
-    Call ServerIni.Initialize(IniPath & "Servidor.ini")
+    Call ServerIni.Initialize(pathServer & fileServerIni)
        
     ' Admins
     buf = val(ServerIni.GetValue("CARGOS", "Admins"))
@@ -298,10 +360,10 @@ Public Sub CargarForbidenWords()
 '
 '***************************************************
 
-    ReDim ForbidenNames(1 To TxtDimension(DatPath & "NombresInvalidos.txt"))
+    ReDim ForbidenNames(1 To TxtDimension(pathDats & "NombresInvalidos.txt"))
     Dim N As Integer, i As Integer
     N = FreeFile(1)
-    Open DatPath & "NombresInvalidos.txt" For Input As #N
+    Open pathDats & "NombresInvalidos.txt" For Input As #N
     
     For i = 1 To UBound(ForbidenNames)
         Line Input #N, ForbidenNames(i)
@@ -325,7 +387,7 @@ On Error GoTo ErrHandler
     Dim Leer As clsIniManager
     Set Leer = New clsIniManager
     
-    Call Leer.Initialize(DatPath & "Hechizos.dat")
+    Call Leer.Initialize(pathDats & "Hechizos.dat")
     
     'obtiene el numero de hechizos
     NumeroHechizos = val(Leer.GetValue("INIT", "NumeroHechizos"))
@@ -473,11 +535,11 @@ Sub LoadMotd()
 
     Dim i As Integer
     
-    MaxLines = val(GetVar(App.Path & "\Dat\Motd.ini", "INIT", "NumLines"))
+    MaxLines = val(GetVar(pathDats & "Motd.ini", "INIT", "NumLines"))
     
     ReDim MOTD(1 To MaxLines)
     For i = 1 To MaxLines
-        MOTD(i).texto = GetVar(App.Path & "\Dat\Motd.ini", "Motd", "Line" & i)
+        MOTD(i).texto = GetVar(pathDats & "Motd.ini", "Motd", "Line" & i)
         MOTD(i).Formato = vbNullString
     Next i
 
@@ -702,7 +764,7 @@ Sub LoadHerreriaArmas()
     Dim lc As Integer
     Dim sArch As String
     
-    sArch = DatPath & "ConstHerreroArmas.dat"
+    sArch = pathDats & "ConstHerreroArmas.dat"
     
     N = val(GetVar(sArch, "INIT", "NumArmas"))
     ReDim Preserve lHerreroArmas(1 To N) As Integer
@@ -723,7 +785,7 @@ Sub LoadHerreriaArmaduras()
     Dim lc As Integer
     Dim sArch As String
     
-    sArch = DatPath & "ConstHerreroArmaduras.dat"
+    sArch = pathDats & "ConstHerreroArmaduras.dat"
     
     N = val(GetVar(sArch, "INIT", "NumArmaduras"))
     ReDim Preserve lHerreroArmaduras(1 To N) As Integer
@@ -745,50 +807,50 @@ Sub LoadBalance()
     'Modificadores de Clase
     For i = 1 To NUMCLASES
         With ModClase(i)
-            .Evasion = val(GetVar(DatPath & "Balance.dat", "MODEVASION", ListaClases(i)))
-            .AtaqueArmas = val(GetVar(DatPath & "Balance.dat", "MODATAQUEARMAS", ListaClases(i)))
-            .AtaqueProyectiles = val(GetVar(DatPath & "Balance.dat", "MODATAQUEPROYECTILES", ListaClases(i)))
-            .AtaqueWrestling = val(GetVar(DatPath & "Balance.dat", "MODATAQUEWRESTLING", ListaClases(i)))
-            .DañoArmas = val(GetVar(DatPath & "Balance.dat", "MODDAÑOARMAS", ListaClases(i)))
-            .DañoProyectiles = val(GetVar(DatPath & "Balance.dat", "MODDAÑOPROYECTILES", ListaClases(i)))
-            .DañoWrestling = val(GetVar(DatPath & "Balance.dat", "MODDAÑOWRESTLING", ListaClases(i)))
-            .Escudo = val(GetVar(DatPath & "Balance.dat", "MODESCUDO", ListaClases(i)))
+            .Evasion = val(GetVar(pathDats & "Balance.dat", "MODEVASION", ListaClases(i)))
+            .AtaqueArmas = val(GetVar(pathDats & "Balance.dat", "MODATAQUEARMAS", ListaClases(i)))
+            .AtaqueProyectiles = val(GetVar(pathDats & "Balance.dat", "MODATAQUEPROYECTILES", ListaClases(i)))
+            .AtaqueWrestling = val(GetVar(pathDats & "Balance.dat", "MODATAQUEWRESTLING", ListaClases(i)))
+            .DañoArmas = val(GetVar(pathDats & "Balance.dat", "MODDAÑOARMAS", ListaClases(i)))
+            .DañoProyectiles = val(GetVar(pathDats & "Balance.dat", "MODDAÑOPROYECTILES", ListaClases(i)))
+            .DañoWrestling = val(GetVar(pathDats & "Balance.dat", "MODDAÑOWRESTLING", ListaClases(i)))
+            .Escudo = val(GetVar(pathDats & "Balance.dat", "MODESCUDO", ListaClases(i)))
         End With
     Next i
     
     'Modificadores de Raza
     For i = 1 To NUMRAZAS
         With ModRaza(i)
-            .Fuerza = val(GetVar(DatPath & "Balance.dat", "MODRAZA", ListaRazas(i) + "Fuerza"))
-            .Agilidad = val(GetVar(DatPath & "Balance.dat", "MODRAZA", ListaRazas(i) + "Agilidad"))
-            .Inteligencia = val(GetVar(DatPath & "Balance.dat", "MODRAZA", ListaRazas(i) + "Inteligencia"))
-            .Carisma = val(GetVar(DatPath & "Balance.dat", "MODRAZA", ListaRazas(i) + "Carisma"))
-            .Constitucion = val(GetVar(DatPath & "Balance.dat", "MODRAZA", ListaRazas(i) + "Constitucion"))
+            .Fuerza = val(GetVar(pathDats & "Balance.dat", "MODRAZA", ListaRazas(i) + "Fuerza"))
+            .Agilidad = val(GetVar(pathDats & "Balance.dat", "MODRAZA", ListaRazas(i) + "Agilidad"))
+            .Inteligencia = val(GetVar(pathDats & "Balance.dat", "MODRAZA", ListaRazas(i) + "Inteligencia"))
+            .Carisma = val(GetVar(pathDats & "Balance.dat", "MODRAZA", ListaRazas(i) + "Carisma"))
+            .Constitucion = val(GetVar(pathDats & "Balance.dat", "MODRAZA", ListaRazas(i) + "Constitucion"))
         End With
     Next i
     
     'Modificadores de Vida
     For i = 1 To NUMCLASES
-        ModVida(i) = val(GetVar(DatPath & "Balance.dat", "MODVIDA", ListaClases(i)))
+        ModVida(i) = val(GetVar(pathDats & "Balance.dat", "MODVIDA", ListaClases(i)))
     Next i
     
     'Distribución de Vida
     For i = 1 To 5
-        DistribucionEnteraVida(i) = val(GetVar(DatPath & "Balance.dat", "DISTRIBUCION", "E" + CStr(i)))
+        DistribucionEnteraVida(i) = val(GetVar(pathDats & "Balance.dat", "DISTRIBUCION", "E" + CStr(i)))
     Next i
     For i = 1 To 4
-        DistribucionSemienteraVida(i) = val(GetVar(DatPath & "Balance.dat", "DISTRIBUCION", "S" + CStr(i)))
+        DistribucionSemienteraVida(i) = val(GetVar(pathDats & "Balance.dat", "DISTRIBUCION", "S" + CStr(i)))
     Next i
     
     'Extra
-    PorcentajeRecuperoMana = val(GetVar(DatPath & "Balance.dat", "EXTRA", "PorcentajeRecuperoMana"))
+    PorcentajeRecuperoMana = val(GetVar(pathDats & "Balance.dat", "EXTRA", "PorcentajeRecuperoMana"))
 
     'Party
-    ExponenteNivelParty = val(GetVar(DatPath & "Balance.dat", "PARTY", "ExponenteNivelParty"))
+    ExponenteNivelParty = val(GetVar(pathDats & "Balance.dat", "PARTY", "ExponenteNivelParty"))
     
     ' Recompensas faccionarias
     For i = 1 To NUM_RANGOS_FACCION
-        RecompensaFacciones(i - 1) = val(GetVar(DatPath & "Balance.dat", "RECOMPENSAFACCION", "Rango" & i))
+        RecompensaFacciones(i - 1) = val(GetVar(pathDats & "Balance.dat", "RECOMPENSAFACCION", "Rango" & i))
     Next i
     
 End Sub
@@ -804,7 +866,7 @@ Sub LoadCarpinteria()
     Dim lc As Integer
     Dim sArch As String
     
-    sArch = DatPath & "ConstCarpintero.dat"
+    sArch = pathDats & "ConstCarpintero.dat"
     
     N = val(GetVar(sArch, "INIT", "NumObjs"))
     ReDim Preserve lCarpintero(1 To N) As Integer
@@ -847,7 +909,7 @@ On Error GoTo ErrHandler
     Dim Leer As clsIniManager
     Set Leer = New clsIniManager
     
-    Call Leer.Initialize(DatPath & "Obj.dat")
+    Call Leer.Initialize(pathDats & "Obj.dat")
     
     'obtiene el numero de obj
     NumObjDatas = val(Leer.GetValue("INIT", "NumObjs"))
@@ -1420,14 +1482,14 @@ Sub CargarBackUp()
     
     On Error GoTo 0 ' GSZTEST GoTo man
         
-        NumMaps = val(GetVar(DatPath & "Map.dat", "INIT", "NumMaps"))
+        NumMaps = val(GetVar(pathDats & "Map.dat", "INIT", "NumMaps"))
         Call InitAreas
         
         frmCargando.pCargar.min = 0
         frmCargando.pCargar.max = NumMaps
         frmCargando.pCargar.Value = 0
         
-        MapPath = GetVar(DatPath & "Map.dat", "INIT", "MapPath")
+        MapPath = GetVar(pathDats & "Map.dat", "INIT", "MapPath")
         
         
         ReDim MapData(1 To NumMaps, XMinMapSize To XMaxMapSize, YMinMapSize To YMaxMapSize) As MapBlock
@@ -1472,14 +1534,14 @@ Sub LoadMapData()
     
     On Error GoTo 0 ' GSZTEST GoTo man
         
-        NumMaps = val(GetVar(DatPath & "Map.dat", "INIT", "NumMaps"))
+        NumMaps = val(GetVar(pathDats & "Map.dat", "INIT", "NumMaps"))
         Call InitAreas
         
         frmCargando.pCargar.min = 0
         frmCargando.pCargar.max = NumMaps
         frmCargando.pCargar.Value = 0
         
-        MapPath = GetVar(DatPath & "Map.dat", "INIT", "MapPath")
+        MapPath = GetVar(pathDats & "Map.dat", "INIT", "MapPath")
         
         
         ReDim MapData(1 To NumMaps, XMinMapSize To XMaxMapSize, YMinMapSize To YMaxMapSize) As MapBlock
@@ -1530,7 +1592,7 @@ On Error GoTo errh
     Set InfReader = New clsByteBuffer
     Set Leer = New clsIniManager
     
-    npcfile = DatPath & "NPCs.dat"
+    npcfile = pathDats & "NPCs.dat"
     
     hFile = FreeFile
 
@@ -1729,7 +1791,7 @@ Sub LoadIntervalos()
 On Error Resume Next
 
     Dim s_File As String
-    s_File = IniPath & "Intervalos.ini"
+    s_File = pathServer & fileServerIni
     
     If FileExist(s_File, vbArchive) Then
         ' ####### Leemos los valores #######
@@ -1833,17 +1895,17 @@ Sub LoadSini()
     Dim sTemp As String
     
     ' Init
-    iniNombre = GetVar(IniPath & "Servidor.ini", "INIT", "Nombre") ' GSZAO
-    iniWWW = GetVar(IniPath & "Servidor.ini", "INIT", "WWW") ' GSZAO
-    iniPuerto = val(GetVar(IniPath & "Servidor.ini", "INIT", "Puerto"))
-    iniVersion = GetVar(IniPath & "Servidor.ini", "INIT", "Version")
-    iniOculto = val(GetVar(IniPath & "Servidor.ini", "INIT", "Oculto"))
-    iniWorldBackup = val(GetVar(IniPath & "Servidor.ini", "INIT", "WorldBackup"))
-    iniMapaPretoriano = val(GetVar(IniPath & "Servidor.ini", "INIT", "MapaPretoriano"))
-    iniWorldGrid = GetVar(IniPath & "Servidor.ini", "INIT", "WorldGrid")
+    iniNombre = GetVar(pathServer & "Servidor.ini", "INIT", "Nombre") ' GSZAO
+    iniWWW = GetVar(pathServer & "Servidor.ini", "INIT", "WWW") ' GSZAO
+    iniPuerto = val(GetVar(pathServer & "Servidor.ini", "INIT", "Puerto"))
+    iniVersion = GetVar(pathServer & "Servidor.ini", "INIT", "Version")
+    iniOculto = val(GetVar(pathServer & "Servidor.ini", "INIT", "Oculto"))
+    iniWorldBackup = val(GetVar(pathServer & "Servidor.ini", "INIT", "WorldBackup"))
+    iniMapaPretoriano = val(GetVar(pathServer & "Servidor.ini", "INIT", "MapaPretoriano"))
+    iniWorldGrid = GetVar(pathServer & "Servidor.ini", "INIT", "WorldGrid")
     If LenB(iniWorldGrid) <> 0 Then ' GSZAO - Es de uso OPCIONAL
-        If LoadWorldGrid(DatPath & iniWorldGrid & ".grid") = False Then
-            Call LogError("Ha ocurrido un error durante la carga de " & DatPath & iniWorldGrid & ".grid. No se puede continuar con la ejecución del servidor.")
+        If LoadWorldGrid(pathDats & iniWorldGrid & ".grid") = False Then
+            Call LogError("Ha ocurrido un error durante la carga de " & pathDats & iniWorldGrid & ".grid. No se puede continuar con la ejecución del servidor.")
             End
         End If
         If NumMaps > 0 Then ' Los mapas ya estan cargados...
@@ -1853,50 +1915,98 @@ Sub LoadSini()
         End If
     End If
     
-    iniRecord = val(GetVar(IniPath & "Servidor.ini", "INIT", "Record"))
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathLogs") ' GSZAO
+    If LenB(sTemp) Then
+        pathLogs = ValidDirectory(pathServer & sTemp)
+    End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathChars") ' GSZAO
+    If LenB(sTemp) Then
+        pathChars = ValidDirectory(pathServer & sTemp)
+    End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathDats") ' GSZAO
+    If LenB(sTemp) Then
+        pathDats = ValidDirectory(pathServer & sTemp)
+    End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathGuilds") ' GSZAO
+    If LenB(sTemp) Then
+        pathGuilds = ValidDirectory(pathServer & sTemp)
+    End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathMaps") ' GSZAO
+    If LenB(sTemp) Then
+        pathMaps = ValidDirectory(pathServer & sTemp)
+    End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathMapsSave") ' GSZAO
+    If LenB(sTemp) Then
+        pathMapsSave = ValidDirectory(pathServer & sTemp)
+    End If
+    
+    
+    ' Control de directorios
+    If Not FileExist(pathLogs, vbDirectory) Then
+        Call MkDir(pathLogs)
+    End If
+    If Not FileExist(pathChars, vbDirectory) Then
+        Call MkDir(pathChars)
+    End If
+    If Not FileExist(pathMapsSave, vbDirectory) Then
+        Call MkDir(pathMapsSave)
+    End If
+    If Not FileExist(pathGuilds, vbDirectory) Then
+        Call MkDir(pathGuilds)
+    End If
+    If Not FileExist(pathDats, vbDirectory) Then
+        MsgBox "Se requiere la carpeta de dats: " & pathDats, vbCritical + vbOKOnly
+        End
+    End If
+    If Not FileExist(pathMaps, vbDirectory) Then
+        MsgBox "Se requiere la carpeta de mapas: " & pathMaps, vbCritical + vbOKOnly
+        End
+    End If
+    
+    iniRecord = val(GetVar(pathServer & fileServerIni, "INIT", "Record"))
     
     ' Opciones
-    iniDragDrop = CByte(val(GetVar(IniPath & "Servidor.ini", "OPCIONES", "DragDrop")))
-    iniTirarOBJZonaSegura = CByte(val(GetVar(IniPath & "Servidor.ini", "OPCIONES", "TirarOBJZonaSegura")))
-    iniMeditarRapido = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "MeditarRapido") = 1, True, False)
-    iniPrivadoPorConsola = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "PrivadoPorConsola") = 1, True, False)
-    iniAutoSacerdote = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "AutoSacerdote") = 1, True, False)
-    iniSacerdoteCuraVeneno = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "SacerdoteCuraVeneno") = 1, True, False)
-    iniNPCNoHostilesConNombre = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "NPCNoHostilesConNombre") = 1, True, False)
-    iniNPCHostilesConNombre = IIf(GetVar(IniPath & "Servidor.ini", "OPCIONES", "NPCHostilesConNombre") = 1, True, False)
+    iniDragDrop = CByte(val(GetVar(pathServer & fileServerIni, "OPCIONES", "DragDrop")))
+    iniTirarOBJZonaSegura = CByte(val(GetVar(pathServer & fileServerIni, "OPCIONES", "TirarOBJZonaSegura")))
+    iniMeditarRapido = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "MeditarRapido") = 1, True, False)
+    iniPrivadoPorConsola = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "PrivadoPorConsola") = 1, True, False)
+    iniAutoSacerdote = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "AutoSacerdote") = 1, True, False)
+    iniSacerdoteCuraVeneno = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "SacerdoteCuraVeneno") = 1, True, False)
+    iniNPCNoHostilesConNombre = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "NPCNoHostilesConNombre") = 1, True, False)
+    iniNPCHostilesConNombre = IIf(GetVar(pathServer & fileServerIni, "OPCIONES", "NPCHostilesConNombre") = 1, True, False)
     
     'Actualizo el frmMain. / maTih.-  |  02/03/2012
     If frmMain.Visible Then frmMain.Record = CStr(iniRecord)
     
     ' Conexiones
-    lTemp = val(GetVar(IniPath & "Servidor.ini", "CONEXION", "MaxUsuarios"))
+    lTemp = val(GetVar(pathServer & fileServerIni, "CONEXION", "MaxUsuarios"))
     If iniMaxUsuarios = 0 Then
         iniMaxUsuarios = lTemp
         ReDim UserList(1 To iniMaxUsuarios) As User
     End If
-    iniMultiLogin = val(GetVar(IniPath & "Servidor.ini", "CONEXION", "MultiLogin"))
-    iniInactivo = val(GetVar(IniPath & "Servidor.ini", "CONEXION", "Inactivo"))
-    LastSockListen = val(GetVar(IniPath & "Servidor.ini", "CONEXION", "LastSockListen"))
+    iniMultiLogin = val(GetVar(pathServer & fileServerIni, "CONEXION", "MultiLogin"))
+    iniInactivo = val(GetVar(pathServer & fileServerIni, "CONEXION", "Inactivo"))
+    lastSockListen = val(GetVar(pathServer & fileServerIni, "CONEXION", "LastSockListen"))
     
     ' Balance
-    iniMaxNivel = CByte(GetVar(IniPath & "Servidor.ini", "BALANCE", "MaxNivel")) ' max 255
+    iniMaxNivel = CByte(GetVar(pathServer & fileServerIni, "BALANCE", "MaxNivel")) ' max 255
     If iniMaxNivel = 0 Then iniMaxNivel = 50
-    iniOro = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Oro"))
-    iniExp = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Exp"))
-    iniTPesca = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Pesca"))
-    iniTMineria = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Mineria"))
-    iniTTala = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Tala"))
+    iniOro = val(GetVar(pathServer & fileServerIni, "BALANCE", "Oro"))
+    iniExp = val(GetVar(pathServer & fileServerIni, "BALANCE", "Exp"))
+    iniTPesca = val(GetVar(pathServer & fileServerIni, "BALANCE", "Pesca"))
+    iniTMineria = val(GetVar(pathServer & fileServerIni, "BALANCE", "Mineria"))
+    iniTTala = val(GetVar(pathServer & fileServerIni, "BALANCE", "Tala"))
     If iniOro <= 0 Then iniOro = 1
     If iniExp <= 0 Then iniExp = 1
     If iniTPesca <= 0 Then iniTPesca = 1
     If iniTMineria <= 0 Then iniTMineria = 1
     If iniTTala <= 0 Then iniTTala = 1
-    iniBilletera = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "Billetera")) ' con 0 se deshabilita
-    iniBilleteraSegura = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "BilleteraSegura"))
+    iniBilletera = val(GetVar(pathServer & fileServerIni, "BALANCE", "Billetera")) ' con 0 se deshabilita
+    iniBilleteraSegura = val(GetVar(pathServer & fileServerIni, "BALANCE", "BilleteraSegura"))
     ' HappyHour
-    iniHappyHourActivado = IIf(GetVar(IniPath & "Servidor.ini", "HAPPYHOUR", "Activado") = 1, True, False)
+    iniHappyHourActivado = IIf(GetVar(pathServer & fileServerIni, "HAPPYHOUR", "Activado") = 1, True, False)
     For lTemp = 1 To 7
-        sTemp = GetVar(IniPath & "Servidor.ini", "HAPPYHOUR", "Dia" & lTemp)
+        sTemp = GetVar(pathServer & fileServerIni, "HAPPYHOUR", "Dia" & lTemp)
         HappyHourDays(lTemp).Hour = val(ReadField(1, sTemp, 45)) ' GSZAO
         HappyHourDays(lTemp).Multi = val(ReadField(2, sTemp, 45)) ' 0.13.5
         If HappyHourDays(lTemp).Hour < 0 Or HappyHourDays(lTemp).Hour > 23 Then HappyHourDays(lTemp).Hour = 20 ' Hora de 0 a 23.
@@ -1904,7 +2014,7 @@ Sub LoadSini()
     Next
     
     ' Dados
-    sTemp = GetVar(IniPath & "Servidor.ini", "DADOS", "Fuerza")
+    sTemp = GetVar(pathServer & fileServerIni, "DADOS", "Fuerza")
     Dados(0).Minimo = val(ReadField(1, sTemp, 45))
     sTemp = ReadField(2, sTemp, 45)
     If LenB(sTemp) <> 0 Then
@@ -1914,7 +2024,7 @@ Sub LoadSini()
         Dados(0).Base = 0
         Dados(0).Random = 0
     End If
-    sTemp = GetVar(IniPath & "Servidor.ini", "DADOS", "Agilidad")
+    sTemp = GetVar(pathServer & fileServerIni, "DADOS", "Agilidad")
     Dados(1).Minimo = val(ReadField(1, sTemp, 45))
     sTemp = ReadField(2, sTemp, 45)
     If LenB(sTemp) <> 0 Then
@@ -1924,7 +2034,7 @@ Sub LoadSini()
         Dados(1).Base = 0
         Dados(1).Random = 0
     End If
-    sTemp = GetVar(IniPath & "Servidor.ini", "DADOS", "Inteligencia")
+    sTemp = GetVar(pathServer & fileServerIni, "DADOS", "Inteligencia")
     Dados(2).Minimo = val(ReadField(1, sTemp, 45))
     sTemp = ReadField(2, sTemp, 45)
     If LenB(sTemp) <> 0 Then
@@ -1934,7 +2044,7 @@ Sub LoadSini()
         Dados(2).Base = 0
         Dados(2).Random = 0
     End If
-    sTemp = GetVar(IniPath & "Servidor.ini", "DADOS", "Carisma")
+    sTemp = GetVar(pathServer & fileServerIni, "DADOS", "Carisma")
     Dados(3).Minimo = val(ReadField(1, sTemp, 45))
     sTemp = ReadField(2, sTemp, 45)
     If LenB(sTemp) <> 0 Then
@@ -1944,7 +2054,7 @@ Sub LoadSini()
         Dados(3).Base = 0
         Dados(3).Random = 0
     End If
-    sTemp = GetVar(IniPath & "Servidor.ini", "DADOS", "Constitucion")
+    sTemp = GetVar(pathServer & fileServerIni, "DADOS", "Constitucion")
     Dados(4).Minimo = val(ReadField(1, sTemp, 45))
     sTemp = ReadField(2, sTemp, 45)
     If LenB(sTemp) <> 0 Then
@@ -1956,9 +2066,9 @@ Sub LoadSini()
     End If
     
     ' Clanes
-    iniCNivel = CByte(GetVar(IniPath & "Servidor.ini", "CLANES", "NivelMinimo"))
-    iniCLiderazgo = val(GetVar(IniPath & "Servidor.ini", "CLANES", "LiderazgoMinimo"))
-    sTemp = GetVar(IniPath & "Servidor.ini", "CLANES", "RequiereOBJ")
+    iniCNivel = CByte(GetVar(pathServer & fileServerIni, "CLANES", "NivelMinimo"))
+    iniCLiderazgo = val(GetVar(pathServer & fileServerIni, "CLANES", "LiderazgoMinimo"))
+    sTemp = GetVar(pathServer & fileServerIni, "CLANES", "RequiereOBJ")
     iniCRequiereObj = val(ReadField(1, sTemp, 45))
     iniCRequiereObjCnt = val(ReadField(2, sTemp, 45))
     If iniCNivel = 0 Then iniCNivel = 25
@@ -1967,80 +2077,80 @@ Sub LoadSini()
     If iniCRequiereObjCnt = 0 Then iniCRequiereObjCnt = 0
     
     ' Meditacion
-    iniFxMedChico = CByte(GetVar(IniPath & "Servidor.ini", "MEDITACION", "FxChico"))
-    iniFxMedMediano = CByte(GetVar(IniPath & "Servidor.ini", "MEDITACION", "FxMediano"))
-    iniFxMedGrande = CByte(GetVar(IniPath & "Servidor.ini", "MEDITACION", "FxGrande"))
-    iniFxMedExtraGrande = CByte(GetVar(IniPath & "Servidor.ini", "MEDITACION", "FxExtraGrande"))
+    iniFxMedChico = CByte(GetVar(pathServer & fileServerIni, "MEDITACION", "FxChico"))
+    iniFxMedMediano = CByte(GetVar(pathServer & fileServerIni, "MEDITACION", "FxMediano"))
+    iniFxMedGrande = CByte(GetVar(pathServer & fileServerIni, "MEDITACION", "FxGrande"))
+    iniFxMedExtraGrande = CByte(GetVar(pathServer & fileServerIni, "MEDITACION", "FxExtraGrande"))
     
     ' Cliente
-    iniSiempreNombres = val(GetVar(IniPath & "Servidor.ini", "CLIENTE", "SiempreNombres"))
-    iniDiaNoche = val(GetVar(IniPath & "Servidor.ini", "CLIENTE", "DiaNoche"))
-    iniSistemaLuces = val(GetVar(IniPath & "Servidor.ini", "CLIENTE", "SistemaLuces"))
+    iniSiempreNombres = val(GetVar(pathServer & fileServerIni, "CLIENTE", "SiempreNombres"))
+    iniDiaNoche = val(GetVar(pathServer & fileServerIni, "CLIENTE", "DiaNoche"))
+    iniSistemaLuces = val(GetVar(pathServer & fileServerIni, "CLIENTE", "SistemaLuces"))
     
     ' Seguridad
-    iniPuedeCrearPersonajes = val(GetVar(IniPath & "Servidor.ini", "SEGURIDAD", "PuedeCrearPersonajes"))
-    iniSoloGMs = val(GetVar(IniPath & "Servidor.ini", "SEGURIDAD", "SoloGMs"))
-    iniTesting = val(GetVar(IniPath & "Servidor.ini", "SEGURIDAD", "Testing"))
-    iniLogDesarrollo = val(GetVar(IniPath & "Servidor.ini", "SEGURIDAD", "LogDesarrollo")) ' GSZAO
+    iniPuedeCrearPersonajes = val(GetVar(pathServer & fileServerIni, "SEGURIDAD", "PuedeCrearPersonajes"))
+    iniSoloGMs = val(GetVar(pathServer & fileServerIni, "SEGURIDAD", "SoloGMs"))
+    iniTesting = val(GetVar(pathServer & fileServerIni, "SEGURIDAD", "Testing"))
+    iniLogDesarrollo = val(GetVar(pathServer & fileServerIni, "SEGURIDAD", "LogDesarrollo")) ' GSZAO
     
     ' Faccion
-    ArmaduraImperial1 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraImperial1"))
-    ArmaduraImperial2 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraImperial2"))
-    ArmaduraImperial3 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraImperial3"))
-    TunicaMagoImperial = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaMagoImperial"))
-    TunicaMagoImperialEnanos = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaMagoImperialEnanos"))
-    ArmaduraCaos1 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraCaos1"))
-    ArmaduraCaos2 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraCaos2"))
-    ArmaduraCaos3 = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraCaos3"))
-    TunicaMagoCaos = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaMagoCaos"))
-    TunicaMagoCaosEnanos = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaMagoCaosEnanos"))
+    ArmaduraImperial1 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraImperial1"))
+    ArmaduraImperial2 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraImperial2"))
+    ArmaduraImperial3 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraImperial3"))
+    TunicaMagoImperial = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaMagoImperial"))
+    TunicaMagoImperialEnanos = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaMagoImperialEnanos"))
+    ArmaduraCaos1 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraCaos1"))
+    ArmaduraCaos2 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraCaos2"))
+    ArmaduraCaos3 = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraCaos3"))
+    TunicaMagoCaos = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaMagoCaos"))
+    TunicaMagoCaosEnanos = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaMagoCaosEnanos"))
     
-    VestimentaImperialHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "VestimentaImperialHumano"))
-    VestimentaImperialEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "VestimentaImperialEnano"))
-    TunicaConspicuaHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaConspicuaHumano"))
-    TunicaConspicuaEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaConspicuaEnano"))
-    ArmaduraNobilisimaHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraNobilisimaHumano"))
-    ArmaduraNobilisimaEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraNobilisimaEnano"))
-    ArmaduraGranSacerdote = val(GetVar(IniPath & "Servidor.ini", "INIT", "ArmaduraGranSacerdote"))
+    VestimentaImperialHumano = val(GetVar(pathServer & fileServerIni, "INIT", "VestimentaImperialHumano"))
+    VestimentaImperialEnano = val(GetVar(pathServer & fileServerIni, "INIT", "VestimentaImperialEnano"))
+    TunicaConspicuaHumano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaConspicuaHumano"))
+    TunicaConspicuaEnano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaConspicuaEnano"))
+    ArmaduraNobilisimaHumano = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraNobilisimaHumano"))
+    ArmaduraNobilisimaEnano = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraNobilisimaEnano"))
+    ArmaduraGranSacerdote = val(GetVar(pathServer & fileServerIni, "INIT", "ArmaduraGranSacerdote"))
     
-    VestimentaLegionHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "VestimentaLegionHumano"))
-    VestimentaLegionEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "VestimentaLegionEnano"))
-    TunicaLobregaHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaLobregaHumano"))
-    TunicaLobregaEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaLobregaEnano"))
-    TunicaEgregiaHumano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaEgregiaHumano"))
-    TunicaEgregiaEnano = val(GetVar(IniPath & "Servidor.ini", "INIT", "TunicaEgregiaEnano"))
-    SacerdoteDemoniaco = val(GetVar(IniPath & "Servidor.ini", "INIT", "SacerdoteDemoniaco"))
+    VestimentaLegionHumano = val(GetVar(pathServer & fileServerIni, "INIT", "VestimentaLegionHumano"))
+    VestimentaLegionEnano = val(GetVar(pathServer & fileServerIni, "INIT", "VestimentaLegionEnano"))
+    TunicaLobregaHumano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaLobregaHumano"))
+    TunicaLobregaEnano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaLobregaEnano"))
+    TunicaEgregiaHumano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaEgregiaHumano"))
+    TunicaEgregiaEnano = val(GetVar(pathServer & fileServerIni, "INIT", "TunicaEgregiaEnano"))
+    SacerdoteDemoniaco = val(GetVar(pathServer & fileServerIni, "INIT", "SacerdoteDemoniaco"))
     
     'Intervalos
     Call LoadIntervalos ' GSZAO
 
     '&&&&&&&&&&&&&&&&&&&&& BALANCE &&&&&&&&&&&&&&&&&&&&&&&
     'Se agregó en LoadBalance y en el Balance.dat
-    'PorcentajeRecuperoMana = val(GetVar(IniPath & "Servidor.ini", "BALANCE", "PorcentajeRecuperoMana"))
+    'PorcentajeRecuperoMana = val(GetVar(pathServer & fileServerIni, "BALANCE", "PorcentajeRecuperoMana"))
     
     ''&&&&&&&&&&&&&&&&&&&&& FIN BALANCE &&&&&&&&&&&&&&&&&&&&&&&
     Call modStatistics.Initialize
     
     ' GSZAO - Es necesario que las ciudades se puedan configurar facilmente :)
-    NUMCIUDADES = val(GetVar(DatPath & "Ciudades.dat", "INIT", "MaxCiudades"))
+    NUMCIUDADES = val(GetVar(pathDats & "Ciudades.dat", "INIT", "MaxCiudades"))
     If NUMCIUDADES > 0 And NUMCIUDADES <= 25 Then ' maximo 25
         ReDim Ciudades(1 To NUMCIUDADES) As WorldPos
         For lTemp = 1 To NUMCIUDADES
-            Ciudades(lTemp).Map = val(GetVar(DatPath & "Ciudades.dat", "CIUDAD" & lTemp, "Mapa"))
-            Ciudades(lTemp).X = val(GetVar(DatPath & "Ciudades.dat", "CIUDAD" & lTemp, "X"))
-            Ciudades(lTemp).Y = val(GetVar(DatPath & "Ciudades.dat", "CIUDAD" & lTemp, "Y"))
+            Ciudades(lTemp).Map = val(GetVar(pathDats & "Ciudades.dat", "CIUDAD" & lTemp, "Mapa"))
+            Ciudades(lTemp).X = val(GetVar(pathDats & "Ciudades.dat", "CIUDAD" & lTemp, "X"))
+            Ciudades(lTemp).Y = val(GetVar(pathDats & "Ciudades.dat", "CIUDAD" & lTemp, "Y"))
         Next
     End If
     
     ' Prisión
-    Prision.Map = val(GetVar(DatPath & "Ciudades.dat", "PRISION", "Mapa"))
-    Prision.X = val(GetVar(DatPath & "Ciudades.dat", "PRISION", "X"))
-    Prision.Y = val(GetVar(DatPath & "Ciudades.dat", "PRISION", "Y"))
+    Prision.Map = val(GetVar(pathDats & "Ciudades.dat", "PRISION", "Mapa"))
+    Prision.X = val(GetVar(pathDats & "Ciudades.dat", "PRISION", "X"))
+    Prision.Y = val(GetVar(pathDats & "Ciudades.dat", "PRISION", "Y"))
     
     ' Libertad de Prisión
-    Libertad.Map = val(GetVar(DatPath & "Ciudades.dat", "LIBERTAD", "Mapa"))
-    Libertad.X = val(GetVar(DatPath & "Ciudades.dat", "LIBERTAD", "X"))
-    Libertad.Y = val(GetVar(DatPath & "Ciudades.dat", "LIBERTAD", "Y"))
+    Libertad.Map = val(GetVar(pathDats & "Ciudades.dat", "LIBERTAD", "Mapa"))
+    Libertad.X = val(GetVar(pathDats & "Ciudades.dat", "LIBERTAD", "X"))
+    Libertad.Y = val(GetVar(pathDats & "Ciudades.dat", "LIBERTAD", "Y"))
 
     Set ConsultaPopular = New clsConsultasPopulares
     Call ConsultaPopular.LoadData
@@ -2436,7 +2546,7 @@ Sub CargarNpcBackUp(ByVal NpcIndex As Integer, ByVal NpcNumber As Integer)
     If frmMain.Visible Then frmMain.txStatus.Text = "Cargando Backup de NPCs"
     
     Dim npcfile As String
-    npcfile = DatPath & "NPCs-Backup.dat"
+    npcfile = pathDats & "NPCs-Backup.dat"
 
     With Npclist(NpcIndex)
     
@@ -2604,9 +2714,9 @@ Public Sub CargaApuestas()
 '
 '***************************************************
 
-    Apuestas.Ganancias = val(GetVar(DatPath & "apuestas.dat", "Main", "Ganancias"))
-    Apuestas.Perdidas = val(GetVar(DatPath & "apuestas.dat", "Main", "Perdidas"))
-    Apuestas.Jugadas = val(GetVar(DatPath & "apuestas.dat", "Main", "Jugadas"))
+    Apuestas.Ganancias = val(GetVar(pathDats & "apuestas.dat", "Main", "Ganancias"))
+    Apuestas.Perdidas = val(GetVar(pathDats & "apuestas.dat", "Main", "Perdidas"))
+    Apuestas.Jugadas = val(GetVar(pathDats & "apuestas.dat", "Main", "Jugadas"))
 
 End Sub
 
@@ -2725,81 +2835,81 @@ Public Sub LoadArmadurasFaccion()
     For ClassIndex = 1 To NUMCLASES
     
         ' Defensa minima para armadas altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinArmyAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinArmyAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Armada(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Armada(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Armada(eTipoDefArmors.ieBaja) = ArmaduraIndex
         
         ' Defensa minima para armadas bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinArmyBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinArmyBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Armada(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Armada(eTipoDefArmors.ieBaja) = ArmaduraIndex
         
         ' Defensa minima para caos altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinCaosAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinCaosAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Caos(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Caos(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Caos(eTipoDefArmors.ieBaja) = ArmaduraIndex
         
         ' Defensa minima para caos bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinCaosBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMinCaosBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Caos(eTipoDefArmors.ieBaja) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Caos(eTipoDefArmors.ieBaja) = ArmaduraIndex
     
     
         ' Defensa media para armadas altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedArmyAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedArmyAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Armada(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Armada(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Armada(eTipoDefArmors.ieMedia) = ArmaduraIndex
         
         ' Defensa media para armadas bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedArmyBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedArmyBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Armada(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Armada(eTipoDefArmors.ieMedia) = ArmaduraIndex
         
         ' Defensa media para caos altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedCaosAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedCaosAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Caos(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Caos(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Caos(eTipoDefArmors.ieMedia) = ArmaduraIndex
         
         ' Defensa media para caos bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedCaosBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefMedCaosBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Caos(eTipoDefArmors.ieMedia) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Caos(eTipoDefArmors.ieMedia) = ArmaduraIndex
     
     
         ' Defensa alta para armadas altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaArmyAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaArmyAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Armada(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Armada(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Armada(eTipoDefArmors.ieAlta) = ArmaduraIndex
         
         ' Defensa alta para armadas bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaArmyBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaArmyBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Armada(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Armada(eTipoDefArmors.ieAlta) = ArmaduraIndex
         
         ' Defensa alta para caos altos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaCaosAlto"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaCaosAlto"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Drow).Caos(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Elfo).Caos(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Humano).Caos(eTipoDefArmors.ieAlta) = ArmaduraIndex
         
         ' Defensa alta para caos bajos
-        ArmaduraIndex = val(GetVar(DatPath & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaCaosBajo"))
+        ArmaduraIndex = val(GetVar(pathDats & "ArmadurasFaccionarias.dat", "CLASE" & ClassIndex, "DefAltaCaosBajo"))
         
         ArmadurasFaccion(ClassIndex, eRaza.Enano).Caos(eTipoDefArmors.ieAlta) = ArmaduraIndex
         ArmadurasFaccion(ClassIndex, eRaza.Gnomo).Caos(eTipoDefArmors.ieAlta) = ArmaduraIndex

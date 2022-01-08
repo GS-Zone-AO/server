@@ -242,11 +242,11 @@ Private Sub UpdateGuildMembers(ByVal GuildIndex As Integer)
                             UserList(UserIndex).fAccion.Reenlistadas = UserList(UserIndex).fAccion.Reenlistadas - 1
                         End If
                     Else
-                        If FileExist(CharPath & MemberName & ".chr") Then
-                            Call WriteVar(CharPath & MemberName & ".chr", "FACCIONES", "EjercitoCaos", 0)
-                            Call WriteVar(CharPath & MemberName & ".chr", "FACCIONES", "EjercitoReal", 0)
-                            Reenlistadas = GetVar(CharPath & MemberName & ".chr", "FACCIONES", "Reenlistadas")
-                            Call WriteVar(CharPath & MemberName & ".chr", "FACCIONES", "Reenlistadas", IIf(Reenlistadas > 1, Reenlistadas - 1, Reenlistadas))
+                        If FileExist(pathChars & MemberName & ".chr") Then
+                            Call WriteVar(pathChars & MemberName & ".chr", "FACCIONES", "EjercitoCaos", 0)
+                            Call WriteVar(pathChars & MemberName & ".chr", "FACCIONES", "EjercitoReal", 0)
+                            Reenlistadas = GetVar(pathChars & MemberName & ".chr", "FACCIONES", "Reenlistadas")
+                            Call WriteVar(pathChars & MemberName & ".chr", "FACCIONES", "Reenlistadas", IIf(Reenlistadas > 1, Reenlistadas - 1, Reenlistadas))
                         End If
                     End If
                 Else    'sale si no es guildLeader
@@ -701,14 +701,14 @@ Dim f           As Byte
         Personaje = Replace(Personaje, ".", vbNullString)
     End If
     
-    If FileExist(CharPath & Personaje & ".chr") Then
-        Promedio = CLng(GetVar(CharPath & Personaje & ".chr", "REP", "Promedio"))
+    If FileExist(pathChars & Personaje & ".chr") Then
+        Promedio = CLng(GetVar(pathChars & Personaje & ".chr", "REP", "Promedio"))
         Select Case guilds(GuildIndex).Alineacion
             Case ALINEACION_GUILD.ALINEACION_ARMADA
                 If Promedio >= 0 Then
-                    ELV = CInt(GetVar(CharPath & Personaje & ".chr", "Stats", "ELV"))
+                    ELV = CInt(GetVar(pathChars & Personaje & ".chr", "Stats", "ELV"))
                     If ELV >= 25 Then
-                        f = CByte(GetVar(CharPath & Personaje & ".chr", "Facciones", "EjercitoReal"))
+                        f = CByte(GetVar(pathChars & Personaje & ".chr", "Facciones", "EjercitoReal"))
                     End If
                     m_EstadoPermiteEntrarChar = IIf(ELV >= 25, f <> 0, True)
                 End If
@@ -717,13 +717,13 @@ Dim f           As Byte
             Case ALINEACION_GUILD.ALINEACION_CRIMINAL
                 m_EstadoPermiteEntrarChar = Promedio < 0
             Case ALINEACION_GUILD.ALINEACION_NEUTRO
-                m_EstadoPermiteEntrarChar = CByte(GetVar(CharPath & Personaje & ".chr", "Facciones", "EjercitoReal")) = 0
-                m_EstadoPermiteEntrarChar = m_EstadoPermiteEntrarChar And (CByte(GetVar(CharPath & Personaje & ".chr", "Facciones", "EjercitoCaos")) = 0)
+                m_EstadoPermiteEntrarChar = CByte(GetVar(pathChars & Personaje & ".chr", "Facciones", "EjercitoReal")) = 0
+                m_EstadoPermiteEntrarChar = m_EstadoPermiteEntrarChar And (CByte(GetVar(pathChars & Personaje & ".chr", "Facciones", "EjercitoCaos")) = 0)
             Case ALINEACION_GUILD.ALINEACION_LEGION
                 If Promedio < 0 Then
-                    ELV = CInt(GetVar(CharPath & Personaje & ".chr", "Stats", "ELV"))
+                    ELV = CInt(GetVar(pathChars & Personaje & ".chr", "Stats", "ELV"))
                     If ELV >= 25 Then
-                        f = CByte(GetVar(CharPath & Personaje & ".chr", "Facciones", "EjercitoCaos"))
+                        f = CByte(GetVar(pathChars & Personaje & ".chr", "Facciones", "EjercitoCaos"))
                     End If
                     m_EstadoPermiteEntrarChar = IIf(ELV >= 25, f <> 0, True)
                 End If
@@ -1041,7 +1041,7 @@ Dim Temps   As String
     If InStrB(PlayerName, ".") <> 0 Then
         PlayerName = Replace(PlayerName, ".", vbNullString)
     End If
-    Temps = GetVar(CharPath & PlayerName & ".chr", "GUILD", "GUILDINDEX")
+    Temps = GetVar(pathChars & PlayerName & ".chr", "GUILD", "GUILDINDEX")
     If IsNumeric(Temps) Then
         GetGuildIndexFromChar = CInt(Temps)
     Else
@@ -1702,8 +1702,8 @@ On Error Resume Next
     If InStrB(Aspirante, ".") <> 0 Then
         Aspirante = Replace(Aspirante, ".", "")
     End If
-    a_ObtenerRechazoDeChar = GetVar(CharPath & Aspirante & ".chr", "GUILD", "MotivoRechazo")
-    Call WriteVar(CharPath & Aspirante & ".chr", "GUILD", "MotivoRechazo", vbNullString)
+    a_ObtenerRechazoDeChar = GetVar(pathChars & Aspirante & ".chr", "GUILD", "MotivoRechazo")
+    Call WriteVar(pathChars & Aspirante & ".chr", "GUILD", "MotivoRechazo", vbNullString)
 End Function
 
 Public Function a_RechazarAspirante(ByVal UserIndex As Integer, ByRef Nombre As String, ByRef refError As String) As Boolean
@@ -1822,7 +1822,7 @@ On Error GoTo error
     Set UserFile = New clsIniManager
     
     With UserFile
-        .Initialize (CharPath & Personaje & ".chr")
+        .Initialize (pathChars & Personaje & ".chr")
         
         ' Get the character's current guild
         GuildActual = val(.GetValue("GUILD", "GuildIndex"))
@@ -1846,7 +1846,7 @@ On Error GoTo error
     Exit Sub
 error:
     Set UserFile = Nothing
-    If Not (FileExist(CharPath & Personaje & ".chr", vbArchive)) Then
+    If Not (FileExist(pathChars & Personaje & ".chr", vbArchive)) Then
         Call LogError("El usuario " & UserList(UserIndex).Name & " (" & UserIndex & " ) ha pedido los detalles del personaje " & Personaje & " que no se encuentra.")
 On Error Resume Next
         ' Fuerzo el borrado de la lista, lo deberia hacer el programa que borra pjs..
@@ -1896,7 +1896,7 @@ Dim NuevoGuildIndex     As Integer
         Exit Function
     End If
 
-    ViejoSolicitado = GetVar(CharPath & UserList(UserIndex).Name & ".chr", "GUILD", "ASPIRANTEA")
+    ViejoSolicitado = GetVar(pathChars & UserList(UserIndex).Name & ".chr", "GUILD", "ASPIRANTEA")
 
     If LenB(ViejoSolicitado) <> 0 Then
         'borramos la vieja solicitud
