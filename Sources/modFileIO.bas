@@ -997,6 +997,8 @@ On Error GoTo ErrHandler
                     .LingP = val(Leer.GetValue("OBJ" & Object, "LingP"))
                     .LingO = val(Leer.GetValue("OBJ" & Object, "LingO"))
                     .SkHerreria = val(Leer.GetValue("OBJ" & Object, "SkHerreria"))
+                    'Helios Fundir
+                    .Fundir = val(Leer.GetValue("OBJ" & Object, "Fundir"))
                     .Real = val(Leer.GetValue("OBJ" & Object, "Real"))
                     .Caos = val(Leer.GetValue("OBJ" & Object, "Caos"))
                     
@@ -1895,25 +1897,13 @@ Sub LoadSini()
     Dim sTemp As String
     
     ' Init
-    iniNombre = GetVar(pathServer & "Servidor.ini", "INIT", "Nombre") ' GSZAO
-    iniWWW = GetVar(pathServer & "Servidor.ini", "INIT", "WWW") ' GSZAO
-    iniPuerto = val(GetVar(pathServer & "Servidor.ini", "INIT", "Puerto"))
-    iniVersion = GetVar(pathServer & "Servidor.ini", "INIT", "Version")
-    iniOculto = val(GetVar(pathServer & "Servidor.ini", "INIT", "Oculto"))
-    iniWorldBackup = val(GetVar(pathServer & "Servidor.ini", "INIT", "WorldBackup"))
-    iniMapaPretoriano = val(GetVar(pathServer & "Servidor.ini", "INIT", "MapaPretoriano"))
-    iniWorldGrid = GetVar(pathServer & "Servidor.ini", "INIT", "WorldGrid")
-    If LenB(iniWorldGrid) <> 0 Then ' GSZAO - Es de uso OPCIONAL
-        If LoadWorldGrid(pathDats & iniWorldGrid & ".grid") = False Then
-            Call LogError("Ha ocurrido un error durante la carga de " & pathDats & iniWorldGrid & ".grid. No se puede continuar con la ejecución del servidor.")
-            End
-        End If
-        If NumMaps > 0 Then ' Los mapas ya estan cargados...
-            For lTemp = 1 To NumMaps
-                Call UpdateGrid(lTemp) ' Actualizamos el Grid en los mapas
-            Next
-        End If
-    End If
+    iniNombre = GetVar(pathServer & fileServerIni, "INIT", "Nombre") ' GSZAO
+    iniWWW = GetVar(pathServer & fileServerIni, "INIT", "WWW") ' GSZAO
+    iniPuerto = val(GetVar(pathServer & fileServerIni, "INIT", "Puerto"))
+    iniVersion = GetVar(pathServer & fileServerIni, "INIT", "Version")
+    iniOculto = val(GetVar(pathServer & fileServerIni, "INIT", "Oculto"))
+    iniWorldBackup = val(GetVar(pathServer & fileServerIni, "INIT", "WorldBackup"))
+    iniMapaPretoriano = val(GetVar(pathServer & fileServerIni, "INIT", "MapaPretoriano"))
     
     sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathLogs") ' GSZAO
     If LenB(sTemp) Then
@@ -1940,7 +1930,6 @@ Sub LoadSini()
         pathMapsSave = ValidDirectory(pathServer & sTemp)
     End If
     
-    
     ' Control de directorios
     If Not FileExist(pathLogs, vbDirectory) Then
         Call MkDir(pathLogs)
@@ -1961,6 +1950,19 @@ Sub LoadSini()
     If Not FileExist(pathMaps, vbDirectory) Then
         MsgBox "Se requiere la carpeta de mapas: " & pathMaps, vbCritical + vbOKOnly
         End
+    End If
+    
+    iniWorldGrid = GetVar(pathServer & fileServerIni, "INIT", "WorldGrid")
+    If LenB(iniWorldGrid) <> 0 Then ' GSZAO - Es de uso OPCIONAL
+        If LoadWorldGrid(pathDats & iniWorldGrid & ".grid") = False Then
+            Call LogError("Ha ocurrido un error durante la carga de " & pathDats & iniWorldGrid & ".grid. No se puede continuar con la ejecución del servidor.")
+            End
+        End If
+        If NumMaps > 0 Then ' Los mapas ya estan cargados...
+            For lTemp = 1 To NumMaps
+                Call UpdateGrid(lTemp) ' Actualizamos el Grid en los mapas
+            Next
+        End If
     End If
     
     iniRecord = val(GetVar(pathServer & fileServerIni, "INIT", "Record"))

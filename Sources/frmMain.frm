@@ -27,6 +27,12 @@ Begin VB.Form frmMain
    ScaleWidth      =   9855
    StartUpPosition =   2  'CenterScreen
    WindowState     =   1  'Minimized
+   Begin VB.Timer tPiqueteC 
+      Enabled         =   0   'False
+      Interval        =   6000
+      Left            =   840
+      Top             =   1560
+   End
    Begin VB.Timer TimerSeg 
       Interval        =   1000
       Left            =   1200
@@ -42,12 +48,6 @@ Begin VB.Form frmMain
       TabIndex        =   12
       Top             =   3840
       Width           =   4455
-   End
-   Begin VB.Timer tPiqueteC 
-      Enabled         =   0   'False
-      Interval        =   6000
-      Left            =   4200
-      Top             =   3960
    End
    Begin VB.TextBox txtChat 
       Appearance      =   0  'Flat
@@ -128,13 +128,6 @@ Begin VB.Form frmMain
       TabIndex        =   0
       Top             =   3120
       Width           =   4935
-      Begin InetCtlsObjects.Inet Inet1 
-         Left            =   600
-         Top             =   600
-         _ExtentX        =   1005
-         _ExtentY        =   1005
-         _Version        =   393216
-      End
       Begin VB.CommandButton Command2 
          BackColor       =   &H00C0E0FF&
          Caption         =   "Enviar por &Consola"
@@ -234,6 +227,13 @@ Begin VB.Form frmMain
       TabIndex        =   11
       Top             =   2760
       Width           =   4455
+   End
+   Begin InetCtlsObjects.Inet Inet1 
+      Left            =   4080
+      Top             =   2040
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      _Version        =   393216
    End
    Begin VB.Label Record 
       Alignment       =   2  'Center

@@ -292,9 +292,14 @@ Public Sub FundirArmas(ByVal UserIndex As Integer)
 
 On Error GoTo ErrHandler
     With UserList(UserIndex)
-        If .flags.TargetObjInvIndex > 0 Then
-            If ObjData(.flags.TargetObjInvIndex).OBJType = eOBJType.otWeapon Then
-                If ObjData(.flags.TargetObjInvIndex).SkHerreria <= .Stats.UserSkills(eSkill.Herreria) / ModHerreriA(.clase) Then
+        If .flags.TargetObjInvIndex > 0 Then ' Sensui fix
+            If ObjData(.flags.TargetObjInvIndex).OBJType = eOBJType.otWeapon Or ObjData(.flags.TargetObjInvIndex).OBJType = eOBJType.otArmadura Or ObjData(.flags.TargetObjInvIndex).OBJType = eOBJType.otCASCO Or ObjData(.flags.TargetObjInvIndex).OBJType = eOBJType.otESCUDO Then
+                'Fix Helios Matadragon
+                 If ObjData(.flags.TargetObjInvIndex).Fundir <= .Stats.UserSkills(eSkill.Herreria) / 1 Then
+                     Call DoFundir(UserIndex)
+                        'Max SkHerreria en el objeto 50
+                        ElseIf ObjData(.flags.TargetObjInvIndex).SkHerreria <= .Stats.UserSkills(eSkill.Herreria) / ModHerreriA(.clase) Then
+             
                     Call DoFundir(UserIndex)
                 Else
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje392) '"No tienes los conocimientos suficientes en herrería para fundir este objeto."
@@ -934,10 +939,13 @@ Public Sub DoFundir(ByVal UserIndex As Integer)
         End With
         
         num = RandomNumber(10, 25)
-        
-        Lingotes(0) = (ObjData(.flags.TargetObjInvIndex).LingH * num) * 0.01
-        Lingotes(1) = (ObjData(.flags.TargetObjInvIndex).LingP * num) * 0.01
-        Lingotes(2) = (ObjData(.flags.TargetObjInvIndex).LingO * num) * 0.01
+        'Fix Helios 09/01/2022
+        If ObjData(.flags.TargetObjInvIndex).LingH <= 19 Then Call WriteConsoleMsg(UserIndex, "¡No has logrado Fundirla! Es demasiada endeble este arma", FontTypeNames.FONTTYPE_INFO): GoTo a:
+        If ObjData(.flags.TargetObjInvIndex).LingP <= 19 Then Call WriteConsoleMsg(UserIndex, "¡No has logrado Fundirla! Es demasiada endeble este arma", FontTypeNames.FONTTYPE_INFO): GoTo a:
+        If ObjData(.flags.TargetObjInvIndex).LingO <= 19 Then Call WriteConsoleMsg(UserIndex, "¡No has logrado Fundirla! Es demasiada endeble este arma", FontTypeNames.FONTTYPE_INFO): GoTo a:
+        Lingotes(0) = (ObjData(.flags.TargetObjInvIndex).LingH * num) * 0.002
+        Lingotes(1) = (ObjData(.flags.TargetObjInvIndex).LingP * num) * 0.002
+        Lingotes(2) = (ObjData(.flags.TargetObjInvIndex).LingO * num) * 0.002
     
         Dim MiObj(2) As Obj
         
@@ -959,7 +967,7 @@ Public Sub DoFundir(ByVal UserIndex As Integer)
             Call LogDesarrollo(.Name & " ha fundido el ítem " & ObjData(ItemIndex).Name) ' 0.13.5
     
         .Counters.Trabajando = .Counters.Trabajando + 1
-        
+a:
     End With
     
 End Sub

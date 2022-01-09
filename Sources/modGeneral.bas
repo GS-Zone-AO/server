@@ -572,12 +572,18 @@ Private Sub SocketConfig()
 '*****************************************************************
 On Error Resume Next
 
+    If Int(iniPuerto) <= 0 Then
+        MsgBox "Se requiere un puerto válido.", vbCritical + vbOKOnly
+        End
+    End If
+
     Call modSecurityIp.InitIpTables(1000)
     
 #If UsarQueSocket = 1 Then
     
     If lastSockListen >= 0 Then Call apiclosesocket(lastSockListen) 'Cierra el socket de escucha
     Call IniciaWsApi(frmMain.hWnd)
+    Debug.Print "SocketConfig[1] Escucha el puerto " & iniPuerto
     sockListen = ListenForConnect(iniPuerto, hWndMsg, "")
     If sockListen <> -1 Then
         Call WriteVar(pathServer & fileServerIni, "CONEXION", "LastSockListen", sockListen) ' Guarda el socket escuchando

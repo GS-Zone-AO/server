@@ -9834,7 +9834,7 @@ On Error GoTo ErrHandler
         Dim LoopC As Byte
         Dim CommandString As String
         Dim N As Byte
-        Dim UserpathChars As String
+        Dim UserPathChars As String
         Dim Var As Long
         
         
@@ -9899,8 +9899,8 @@ On Error GoTo ErrHandler
         End If
 
         If valido Then
-            UserpathChars = pathChars & UserName & ".chr"
-            If tUser <= 0 And Not FileExist(UserpathChars) Then
+            UserPathChars = pathChars & UserName & ".chr"
+            If tUser <= 0 And Not FileExist(UserPathChars) Then
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje295) '"Estás intentando editar un usuario inexistente."
                 Call LogGM(.Name, "Intentó editar un usuario inexistente.")
             Else
@@ -9911,7 +9911,7 @@ On Error GoTo ErrHandler
                     Case eEditOptions.eo_Gold
                         If val(Arg1) <= MAX_ORO_EDIT Then
                             If tUser <= 0 Then ' Esta offline?
-                                Call WriteVar(UserpathChars, "STATS", "GLD", val(Arg1))
+                                Call WriteVar(UserPathChars, "STATS", "GLD", val(Arg1))
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).Stats.GLD = val(Arg1)
@@ -9930,8 +9930,8 @@ On Error GoTo ErrHandler
                         End If
                         
                         If tUser <= 0 Then ' Offline
-                            Var = GetVar(UserpathChars, "STATS", "EXP")
-                            Call WriteVar(UserpathChars, "STATS", "EXP", Var + val(Arg1))
+                            Var = GetVar(UserPathChars, "STATS", "EXP")
+                            Call WriteVar(UserPathChars, "STATS", "EXP", Var + val(Arg1))
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.Exp = UserList(tUser).Stats.Exp + val(Arg1)
@@ -9944,7 +9944,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_Body
                         If tUser <= 0 Then
-                            Call WriteVar(UserpathChars, "INIT", "Body", Arg1)
+                            Call WriteVar(UserPathChars, "INIT", "Body", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else
                             Call ChangeUserChar(tUser, val(Arg1), UserList(tUser).Char.Head, UserList(tUser).Char.heading, UserList(tUser).Char.WeaponAnim, UserList(tUser).Char.ShieldAnim, UserList(tUser).Char.CascoAnim)
@@ -9955,7 +9955,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_Head
                         If tUser <= 0 Then
-                            Call WriteVar(UserpathChars, "INIT", "Head", Arg1)
+                            Call WriteVar(UserPathChars, "INIT", "Head", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else
                             Call ChangeUserChar(tUser, UserList(tUser).Char.Body, val(Arg1), UserList(tUser).Char.heading, UserList(tUser).Char.WeaponAnim, UserList(tUser).Char.ShieldAnim, UserList(tUser).Char.CascoAnim)
@@ -9968,7 +9968,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXUSERMATADOS, MAXUSERMATADOS, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "FACCIONES", "CrimMatados", Var)
+                            Call WriteVar(UserPathChars, "FACCIONES", "CrimMatados", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).fAccion.CriminalesMatados = Var
@@ -9981,7 +9981,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXUSERMATADOS, MAXUSERMATADOS, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "FACCIONES", "CiudMatados", Var)
+                            Call WriteVar(UserPathChars, "FACCIONES", "CiudMatados", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).fAccion.CiudadanosMatados = Var
@@ -10001,7 +10001,7 @@ On Error GoTo ErrHandler
                             
                             Dim GI As Integer
                             If tUser <= 0 Then
-                                GI = GetVar(UserpathChars, "GUILD", "GUILDINDEX")
+                                GI = GetVar(UserPathChars, "GUILD", "GUILDINDEX")
                             Else
                                 GI = UserList(tUser).GuildIndex
                             End If
@@ -10019,7 +10019,7 @@ On Error GoTo ErrHandler
                         End If
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "STATS", "ELV", val(Arg1))
+                            Call WriteVar(UserPathChars, "STATS", "ELV", val(Arg1))
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.ELV = val(Arg1)
@@ -10038,7 +10038,7 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje296) '"Clase desconocida. Intente nuevamente."
                         Else
                             If tUser <= 0 Then ' Offline
-                                Call WriteVar(UserpathChars, "INIT", "Clase", LoopC)
+                                Call WriteVar(UserPathChars, "INIT", "Clase", LoopC)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).clase = LoopC
@@ -10057,13 +10057,13 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje297) '"Skill Inexistente!"
                         Else
                             If tUser <= 0 Then ' Offline
-                                Call WriteVar(UserpathChars, "Skills", "SK" & LoopC, Arg2)
-                                Call WriteVar(UserpathChars, "Skills", "EXPSK" & LoopC, 0)
+                                Call WriteVar(UserPathChars, "Skills", "SK" & LoopC, Arg2)
+                                Call WriteVar(UserPathChars, "Skills", "EXPSK" & LoopC, 0)
                                 
                                 If Arg2 < MAXSKILLPOINTS Then
-                                    Call WriteVar(UserpathChars, "Skills", "ELUSK" & LoopC, ELU_SKILL_INICIAL * 1.05 ^ Arg2)
+                                    Call WriteVar(UserPathChars, "Skills", "ELUSK" & LoopC, ELU_SKILL_INICIAL * 1.05 ^ Arg2)
                                 Else
-                                    Call WriteVar(UserpathChars, "Skills", "ELUSK" & LoopC, 0)
+                                    Call WriteVar(UserPathChars, "Skills", "ELUSK" & LoopC, 0)
                                 End If
     
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
@@ -10078,7 +10078,7 @@ On Error GoTo ErrHandler
                     
                     Case eEditOptions.eo_SkillPointsLeft
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "STATS", "SkillPtsLibres", Arg1)
+                            Call WriteVar(UserPathChars, "STATS", "SkillPtsLibres", Arg1)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Stats.SkillPts = val(Arg1)
@@ -10091,7 +10091,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXREP, MAXREP, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "REP", "Nobles", Var)
+                            Call WriteVar(UserPathChars, "REP", "Nobles", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Reputacion.NobleRep = Var
@@ -10104,7 +10104,7 @@ On Error GoTo ErrHandler
                         Var = IIf(val(Arg1) > MAXREP, MAXREP, val(Arg1))
                         
                         If tUser <= 0 Then ' Offline
-                            Call WriteVar(UserpathChars, "REP", "Asesino", Var)
+                            Call WriteVar(UserPathChars, "REP", "Asesino", Var)
                             Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                         Else ' Online
                             UserList(tUser).Reputacion.AsesinoRep = Var
@@ -10120,7 +10120,7 @@ On Error GoTo ErrHandler
                         
                         If Sex <> 0 Then ' Es Hombre o mujer?
                             If tUser <= 0 Then ' OffLine
-                                Call WriteVar(UserpathChars, "INIT", "Genero", Sex)
+                                Call WriteVar(UserPathChars, "INIT", "Genero", Sex)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else ' Online
                                 UserList(tUser).Genero = Sex
@@ -10156,7 +10156,7 @@ On Error GoTo ErrHandler
                             Call WriteMensajes(UserIndex, eMensajes.Mensaje299) '"Raza desconocida. Intente nuevamente."
                         Else
                             If tUser <= 0 Then
-                                Call WriteVar(UserpathChars, "INIT", "Raza", raza)
+                                Call WriteVar(UserPathChars, "INIT", "Raza", raza)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else
                                 UserList(tUser).raza = raza
@@ -10175,7 +10175,7 @@ On Error GoTo ErrHandler
                         Else
                             If tUser <= 0 Then
                                 bankGold = GetVar(pathChars & UserName & ".chr", "STATS", "BANCO")
-                                Call WriteVar(UserpathChars, "STATS", "BANCO", IIf(bankGold + val(Arg1) <= 0, 0, bankGold + val(Arg1)))
+                                Call WriteVar(UserPathChars, "STATS", "BANCO", IIf(bankGold + val(Arg1) <= 0, 0, bankGold + val(Arg1)))
                                 Call WriteConsoleMsg(UserIndex, "Se le ha agregado " & Arg1 & " monedas de oro a " & UserName & ".", FONTTYPE_TALK)
                             Else
                                 UserList(tUser).Stats.Banco = IIf(UserList(tUser).Stats.Banco + val(Arg1) <= 0, 0, UserList(tUser).Stats.Banco + val(Arg1))
@@ -10216,7 +10216,7 @@ On Error GoTo ErrHandler
                         If InMapBounds(Map, X, Y) Then
                             
                             If tUser <= 0 Then
-                                Call WriteVar(UserpathChars, "INIT", "POSITION", Map & "-" & X & "-" & Y)
+                                Call WriteVar(UserPathChars, "INIT", "POSITION", Map & "-" & X & "-" & Y)
                                 Call WriteConsoleMsg(UserIndex, "Charfile Alterado: " & UserName, FontTypeNames.FONTTYPE_INFO)
                             Else
                                 Call WarpUserChar(tUser, Map, X, Y, True, True)
@@ -20352,7 +20352,7 @@ On Error GoTo ErrHandler
         'Remove packet ID
         Call buffer.ReadByte
         
-        Dim TempString As String, UserpathChars As String, UserName As String
+        Dim TempString As String, UserPathChars As String, UserName As String
         Dim tUser As Integer, NumWizs As Integer, WizNum As Integer
         Dim Cargo As eCargos, Accion As eAcciones
         Dim Existe As Boolean
@@ -20414,8 +20414,8 @@ On Error GoTo ErrHandler
                     tUser = NameIndex(UserName) ' esta conectado :P
                 End If
                 UserName = UCase$(UserName) ' MAYUSCULAS
-                UserpathChars = pathChars & UserName & ".chr"
-                If Not FileExist(UserpathChars) Then ' no existe el usuario!
+                UserPathChars = pathChars & UserName & ".chr"
+                If Not FileExist(UserPathChars) Then ' no existe el usuario!
                     Call WriteMensajes(UserIndex, eMensajes.Mensaje169)
                 Else
                     Select Case Accion

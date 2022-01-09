@@ -940,6 +940,8 @@ Public Type ObjData
     MaderaElfica As Integer
     
     SkHerreria As Integer
+    'helios
+    Fundir As Integer
     SkCarpinteria As Integer
     
     texto As String
