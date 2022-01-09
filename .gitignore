@@ -1,4 +1,6 @@
 Sources/*.log
+Logs/*.log
+Logs/*.txt
 *.exe
 *.obj
 *.log
