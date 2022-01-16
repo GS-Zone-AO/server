@@ -71,7 +71,7 @@ Public Sub LoadSoundMapInfo()
     Dim Temps As String
     Dim MAPFILE As String
     
-    MAPFILE = App.Path & MapPath & "MAPA"
+    MAPFILE = pathMaps & fileMapFlagName
     
     'Usage of Val() prevents errors when dats are corrputed or incomplete. All invalid values are assumed to be zero.
     
@@ -114,11 +114,11 @@ Public Sub ReproducirSonidosDeMapas()
                 'tocarlo
                 If Lloviendo Then
                     If p_Mapas(i).flags(SonidoMapa) Xor p_eSoundFlags.Lluvia Then
-                        Call SendData(SendTarget.toMap, i, PrepareMessagePlayWave(p_Mapas(i).SoundIndex(SonidoMapa), posX, posY))
+                        Call SendData(SendTarget.ToMap, i, PrepareMessagePlayWave(p_Mapas(i).SoundIndex(SonidoMapa), posX, posY))
                     End If
                 Else
                     If p_Mapas(i).flags(SonidoMapa) Xor p_eSoundFlags.ninguna Then
-                        Call SendData(SendTarget.toMap, i, PrepareMessagePlayWave(p_Mapas(i).SoundIndex(SonidoMapa), posX, posY))
+                        Call SendData(SendTarget.ToMap, i, PrepareMessagePlayWave(p_Mapas(i).SoundIndex(SonidoMapa), posX, posY))
                     End If
                 End If
             End If

@@ -29,12 +29,6 @@ Attribute VB_Name = "modFileIO"
 
 Option Explicit
 
-''
-'Ruta base para los archivos de mapas
-Public MapPath As String
-Public MapBackupPath As String ' GSZAO
-Public MapFlagName As String ' GSZAO
-
 Function FileExist(ByVal File As String, _
                    Optional FileType As VbFileAttribute = vbNormal) As Boolean
     '*****************************************************************
@@ -1473,7 +1467,7 @@ End Function
 Sub CargarBackUp()
 '***************************************************
 'Author: Unknownn
-'Last Modification: 10/07/2012 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '
 '***************************************************
 
@@ -1485,27 +1479,28 @@ Sub CargarBackUp()
     On Error GoTo 0 ' GSZTEST GoTo man
         
         NumMaps = val(GetVar(pathDats & "Map.dat", "INIT", "NumMaps"))
+        fileMapFlagName = GetVar(pathDats & "Map.dat", "INIT", "MapFlagName")
+        If Len(fileMapFlagName) = 0 Then
+            fileMapFlagName = fileMapFlagDefault 'default
+        End If
+        
         Call InitAreas
         
         frmCargando.pCargar.min = 0
         frmCargando.pCargar.max = NumMaps
         frmCargando.pCargar.Value = 0
         
-        MapPath = GetVar(pathDats & "Map.dat", "INIT", "MapPath")
-        
-        
         ReDim MapData(1 To NumMaps, XMinMapSize To XMaxMapSize, YMinMapSize To YMaxMapSize) As MapBlock
         ReDim MapInfo(1 To NumMaps) As MapInfo
         
         For Map = 1 To NumMaps
-            If val(GetVar(App.Path & MapPath & "Mapa" & Map & ".Dat", "Mapa" & Map, "BackUp")) <> 0 Then
-                tFileName = App.Path & "\WorldBackUp\Mapa" & Map
-                
+            If val(GetVar(pathMaps & fileMapFlagName & Map & ".Dat", fileMapFlagName & Map, "BackUp")) <> 0 Then
+                tFileName = pathMapsSave & fileMapFlagName & Map
                 If Not FileExist(tFileName & ".*") Then 'Miramos que exista al menos uno de los 3 archivos, sino lo cargamos de la carpeta de los mapas
-                    tFileName = App.Path & MapPath & "Mapa" & Map
+                    tFileName = pathMaps & fileMapFlagName & Map
                 End If
             Else
-                tFileName = App.Path & MapPath & "Mapa" & Map
+                tFileName = pathMaps & fileMapFlagName & Map
             End If
             
             Call CargarMapa(Map, tFileName)
@@ -1525,7 +1520,7 @@ End Sub
 Sub LoadMapData()
 '***************************************************
 'Author: Unknownn
-'Last Modification: 10/07/2012 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '
 '***************************************************
 
@@ -1537,21 +1532,22 @@ Sub LoadMapData()
     On Error GoTo 0 ' GSZTEST GoTo man
         
         NumMaps = val(GetVar(pathDats & "Map.dat", "INIT", "NumMaps"))
+        fileMapFlagName = GetVar(pathDats & "Map.dat", "INIT", "MapFlagName")
+        If Len(fileMapFlagName) = 0 Then
+            fileMapFlagName = fileMapFlagDefault 'default
+        End If
+        
         Call InitAreas
         
         frmCargando.pCargar.min = 0
         frmCargando.pCargar.max = NumMaps
         frmCargando.pCargar.Value = 0
         
-        MapPath = GetVar(pathDats & "Map.dat", "INIT", "MapPath")
-        
-        
         ReDim MapData(1 To NumMaps, XMinMapSize To XMaxMapSize, YMinMapSize To YMaxMapSize) As MapBlock
         ReDim MapInfo(1 To NumMaps) As MapInfo
           
         For Map = 1 To NumMaps
-            
-            tFileName = App.Path & MapPath & "Mapa" & Map
+            tFileName = pathMaps & fileMapFlagName & Map
             Call CargarMapa(Map, tFileName)
             
             frmCargando.pCargar.Value = frmCargando.pCargar.Value + 1
@@ -1788,9 +1784,9 @@ End Sub
 Sub LoadIntervalos()
 '***************************************************
 'Author: ^[GS]^
-'Last Modification: 31/03/2013 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '***************************************************
-On Error Resume Next
+On Error GoTo error
 
     Dim s_File As String
     s_File = pathServer & fileServerIni
@@ -1884,6 +1880,11 @@ On Error Resume Next
     IntervaloPuedeSerAtacado = 5000 ' Cargar desde balance.dat
     IntervaloAtacable = 60000 ' Cargar desde balance.dat
     IntervaloOwnedNpc = 18000 ' Cargar desde balance.dat
+    
+    Exit Sub
+error:
+    MsgBox "Error en LoadIntervalos: " & Err.Number & " - " & Err.description
+    Call LogError("LoadIntervalos: " & Err.Number & " - " & Err.description)
 
 End Sub
 

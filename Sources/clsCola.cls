@@ -115,9 +115,9 @@ End Function
 Public Sub Push(ByVal Detalle As String, Optional ByVal ConvertUpper As Boolean = True)
 '***************************************************
 'Author: Unknownn
-'Last Modification: 10/08/2011 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '***************************************************
-On Error Resume Next
+On Error GoTo error
     'Mete elemento en la cola
     
     Dim aux As String
@@ -137,6 +137,9 @@ On Error Resume Next
     End If
     
     Call Cola.Add(aux)
+
+error:
+    Call LogError("Push: " & Err.Number & " - " & Err.description & " - Detalle: " & Detalle)
 
 End Sub
 

@@ -91,7 +91,7 @@ On Error GoTo ErrHandler
                 TelepRadio = ObjData(.ObjInfo.ObjIndex).Radio
             End If
             
-            ' GSZAO
+            ' WorldGrid GSZAO
             GridPos.Map = 0
             If MaxGrid > 0 Then ' Utiliza Grid
                 If X = 10 Then ' izquierda

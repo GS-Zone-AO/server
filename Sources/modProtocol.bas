@@ -1073,10 +1073,11 @@ End Sub
 Public Sub HandleIncomingData(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 18/03/2013 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '
 '***************************************************
 On Error Resume Next
+
     Dim packetID As Byte
     
     packetID = UserList(UserIndex).incomingData.PeekByte()
@@ -1552,6 +1553,7 @@ On Error Resume Next
         'Flush buffer - send everything that has been written
         Call FlushBuffer(UserIndex)
     End If
+    
 End Sub
 
 Private Sub HandleGMCommands(ByVal UserIndex As Integer)
@@ -9070,7 +9072,7 @@ On Error GoTo ErrHandler
                         Call WarpUserChar(tUser, Map, X, Y, True, True)
                         If tUser <> UserIndex Then ' GSZAO - Solo guardamos log cuando teletransporta a otro jugador y no a si mismo.
                             Call WriteConsoleMsg(UserIndex, UserList(tUser).Name & " transportado.", FontTypeNames.FONTTYPE_INFO)
-                            Call LogGM(.Name, "Transportó a " & UserList(tUser).Name & " hacia " & "Mapa" & Map & " X:" & X & " Y:" & Y)
+                            Call LogGM(.Name, "Transportó a " & UserList(tUser).Name & " hacia " & fileMapFlagName & Map & " X:" & X & " Y:" & Y)
                         End If
                     End If
                 Else
@@ -14154,7 +14156,7 @@ Public Sub HandleChangeMapInfoBackup(ByVal UserIndex As Integer)
         End If
         
         'Change the boolean to string in a fast way
-        Call WriteVar(App.Path & MapPath & "mapa" & .Pos.Map & ".dat", "Mapa" & .Pos.Map, "backup", MapInfo(.Pos.Map).Backup)
+        Call WriteVar(pathMaps & fileMapFlagName & .Pos.Map & ".dat", "Mapa" & .Pos.Map, "backup", MapInfo(.Pos.Map).Backup)
         
         Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " Backup: " & MapInfo(.Pos.Map).Backup, FontTypeNames.FONTTYPE_INFO)
     End With
@@ -14192,7 +14194,7 @@ Public Sub HandleChangeMapInfoPK(ByVal UserIndex As Integer)
         MapInfo(.Pos.Map).Pk = isMapPk
         
         'Change the boolean to string in a fast way
-        Call WriteVar(App.Path & MapPath & "mapa" & .Pos.Map & ".dat", "Mapa" & .Pos.Map, "Pk", IIf(isMapPk, "1", "0"))
+        Call WriteVar(pathMaps & fileMapFlagName & .Pos.Map & ".dat", "Mapa" & .Pos.Map, "Pk", IIf(isMapPk, "1", "0"))
 
         Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " PK: " & MapInfo(.Pos.Map).Pk, FontTypeNames.FONTTYPE_INFO)
     End With
@@ -14231,7 +14233,7 @@ On Error GoTo ErrHandler
             If tStr = "NEWBIE" Or tStr = "NO" Or tStr = "ARMADA" Or tStr = "CAOS" Or tStr = "FACCION" Then
                 Call LogGM(.Name, .Name & " ha cambiado la información sobre si es restringido el mapa.")
                 MapInfo(UserList(UserIndex).Pos.Map).Restringir = RestrictStringToByte(tStr)
-                Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Restringir", tStr)
+                Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Restringir", tStr)
                 Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " Restringido: " & RestrictByteToString(MapInfo(.Pos.Map).Restringir), FontTypeNames.FONTTYPE_INFO)
             Else
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje329) '"Opciones para restringir: 'NEWBIE', 'NO', 'ARMADA', 'CAOS', 'FACCION'"
@@ -14280,7 +14282,7 @@ Public Sub HandleChangeMapInfoNoMagic(ByVal UserIndex As Integer)
         If (.flags.Privilegios And (PlayerType.Admin Or PlayerType.Dios)) <> 0 Then
             Call LogGM(.Name, .Name & " ha cambiado la información sobre si está permitido usar la magia el mapa.")
             MapInfo(UserList(UserIndex).Pos.Map).MagiaSinEfecto = nomagic
-            Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "MagiaSinEfecto", nomagic)
+            Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "MagiaSinEfecto", nomagic)
             Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " MagiaSinEfecto: " & MapInfo(.Pos.Map).MagiaSinEfecto, FontTypeNames.FONTTYPE_INFO)
         End If
     End With
@@ -14313,7 +14315,7 @@ Public Sub HandleChangeMapInfoNoInvi(ByVal UserIndex As Integer)
         If (.flags.Privilegios And (PlayerType.Admin Or PlayerType.Dios)) <> 0 Then
             Call LogGM(.Name, .Name & " ha cambiado la información sobre si está permitido usar la invisibilidad en el mapa.")
             MapInfo(UserList(UserIndex).Pos.Map).InviSinEfecto = noinvi
-            Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "InviSinEfecto", noinvi)
+            Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "InviSinEfecto", noinvi)
             Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " InviSinEfecto: " & MapInfo(.Pos.Map).InviSinEfecto, FontTypeNames.FONTTYPE_INFO)
         End If
     End With
@@ -14346,7 +14348,7 @@ Public Sub HandleChangeMapInfoNoResu(ByVal UserIndex As Integer)
         If (.flags.Privilegios And (PlayerType.Admin Or PlayerType.Dios)) <> 0 Then
             Call LogGM(.Name, .Name & " ha cambiado la información sobre si está permitido usar el resucitar en el mapa.")
             MapInfo(UserList(UserIndex).Pos.Map).ResuSinEfecto = noresu
-            Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "ResuSinEfecto", noresu)
+            Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "ResuSinEfecto", noresu)
             Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " ResuSinEfecto: " & MapInfo(.Pos.Map).ResuSinEfecto, FontTypeNames.FONTTYPE_INFO)
         End If
     End With
@@ -14385,7 +14387,7 @@ On Error GoTo ErrHandler
             If tStr = "BOSQUE" Or tStr = "NIEVE" Or tStr = "DESIERTO" Or tStr = "CIUDAD" Or tStr = "CAMPO" Or tStr = "DUNGEON" Then
                 Call LogGM(.Name, .Name & " ha cambiado la información del terreno del mapa.")
                 MapInfo(UserList(UserIndex).Pos.Map).Terreno = TerrainStringToByte(tStr)
-                Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Terreno", tStr)
+                Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Terreno", tStr)
                 Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " Terreno: " & TerrainByteToString(MapInfo(.Pos.Map).Terreno), FontTypeNames.FONTTYPE_INFO)
             Else
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje330) '"Opciones para terreno: 'BOSQUE', 'NIEVE', 'DESIERTO', 'CIUDAD', 'CAMPO', 'DUNGEON'"
@@ -14441,7 +14443,7 @@ On Error GoTo ErrHandler
             If tStr = "BOSQUE" Or tStr = "NIEVE" Or tStr = "DESIERTO" Or tStr = "CIUDAD" Or tStr = "CAMPO" Or tStr = "DUNGEON" Then
                 Call LogGM(.Name, .Name & " ha cambiado la información de la zona del mapa.")
                 MapInfo(UserList(UserIndex).Pos.Map).Zona = tStr
-                Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Zona", tStr)
+                Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "Zona", tStr)
                 Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " Zona: " & MapInfo(.Pos.Map).Zona, FontTypeNames.FONTTYPE_INFO)
             Else
                 Call WriteMensajes(UserIndex, eMensajes.Mensaje330) '"Opciones para terreno: 'BOSQUE', 'NIEVE', 'DESIERTO', 'CIUDAD', 'CAMPO', 'DUNGEON'"
@@ -14494,7 +14496,7 @@ Public Sub HandleChangeMapInfoStealNpc(ByVal UserIndex As Integer) ' 0.13.3
             
             MapInfo(UserList(UserIndex).Pos.Map).RoboNpcsPermitido = RoboNpc
             
-            Call WriteVar(App.Path & MapPath & "mapa" & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "RoboNpcsPermitido", RoboNpc)
+            Call WriteVar(pathMaps & fileMapFlagName & UserList(UserIndex).Pos.Map & ".dat", "Mapa" & UserList(UserIndex).Pos.Map, "RoboNpcsPermitido", RoboNpc)
             Call WriteConsoleMsg(UserIndex, "Mapa " & .Pos.Map & " RoboNpcsPermitido: " & MapInfo(.Pos.Map).RoboNpcsPermitido, FontTypeNames.FONTTYPE_INFO)
         End If
     End With
@@ -14534,7 +14536,7 @@ Public Sub HandleChangeMapInfoNoOcultar(ByVal UserIndex As Integer) ' 0.13.3
             
             MapInfo(mapa).OcultarSinEfecto = NoOcultar
             
-            Call WriteVar(App.Path & MapPath & "mapa" & mapa & ".dat", "Mapa" & mapa, "OcultarSinEfecto", NoOcultar)
+            Call WriteVar(pathMaps & fileMapFlagName & mapa & ".dat", "Mapa" & mapa, "OcultarSinEfecto", NoOcultar)
             Call WriteConsoleMsg(UserIndex, "Mapa " & mapa & " OcultarSinEfecto: " & NoOcultar, FontTypeNames.FONTTYPE_INFO)
         End If
         
@@ -14576,7 +14578,7 @@ Public Sub HandleChangeMapInfoNoInvocar(ByVal UserIndex As Integer) ' 0.13.3
             
             MapInfo(mapa).InvocarSinEfecto = NoInvocar
             
-            Call WriteVar(App.Path & MapPath & "mapa" & mapa & ".dat", "Mapa" & mapa, "InvocarSinEfecto", NoInvocar)
+            Call WriteVar(pathMaps & fileMapFlagName & mapa & ".dat", "Mapa" & mapa, "InvocarSinEfecto", NoInvocar)
             Call WriteConsoleMsg(UserIndex, "Mapa " & mapa & " InvocarSinEfecto: " & NoInvocar, FontTypeNames.FONTTYPE_INFO)
         End If
         

@@ -1721,6 +1721,8 @@ Public pathDats As String 'Ruta base para los DATs
 Public pathGuilds As String 'Ruta base para los Guilds/Clanes
 Public pathMaps As String 'Ruta base para los mapas
 Public pathMapsSave As String 'Ruta base para el worldsave de mapas
+Public fileMapFlagName As String
+Public Const fileMapFlagDefault As String = "Mapa"
 Public Const fileServerIni As String = "server.ini"
 Public Const fileIntervalsIni As String = "intervals.ini"
 

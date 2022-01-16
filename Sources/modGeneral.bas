@@ -209,10 +209,10 @@ End Sub
 Sub Main()
 '***************************************************
 'Author: Unknownn
-'Last Modification: 08/06/2012 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 '***************************************************
 
-On Error Resume Next
+On Error GoTo error
 
     Dim f As Date
     Dim aux As String
@@ -353,15 +353,22 @@ On Error Resume Next
     
     'Actualizo el frmMain. / maTih.-  |  02/03/2012
     If frmMain.Visible Then frmMain.Record.Caption = CStr(iniRecord)
+    
+    Exit Sub
+    
+error:
+    MsgBox "Error en Main: " & Err.Number & " - " & Err.description
+    Call LogError("Main: " & Err.Number & " - " & Err.description)
+    End
 End Sub
 
 Private Sub LoadConstants()
 '*****************************************************************
 'Author: ZaMa
-'Last Modification: 30/04/2013 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 'Loads all constants and general parameters.
 '*****************************************************************
-On Error Resume Next
+On Error GoTo error
    
     LastBackup = Format$(Now, "Short Time")
     Minutos = Format$(Now, "Short Time")
@@ -502,16 +509,21 @@ On Error Resume Next
     Set aClon = New clsAntiMassClon
     Set aLimpiarMundo = New clsLimpiarMundo ' GSZAO
     Set aMundo = New clsMundo ' GSZAO
-
+    
+    Exit Sub
+error:
+    MsgBox "Error en LoadConstants: " & Err.Number & " - " & Err.description
+    Call LogError("LoadConstants: " & Err.Number & " - " & Err.description)
+    
 End Sub
 
 Private Sub LoadArrays()
 '*****************************************************************
 'Author: ZaMa
-'Last Modification: 12/08/2014 - ^[GS]^
+'Last Modification: 16/01/2022 - ^[GS]^
 'Loads all arrays
 '*****************************************************************
-On Error Resume Next
+On Error GoTo error
     ' Load Records
     Call LoadRecords
     ' Load guilds info
@@ -522,6 +534,10 @@ On Error Resume Next
     Call CargarForbidenWords
     ' Load quests
     Call LoadQuests ' GSZAO
+    Exit Sub
+error:
+    MsgBox "Error en LoadArrays: " & Err.Number & " - " & Err.description
+    Call LogError("LoadArrays: " & Err.Number & " - " & Err.description)
 End Sub
 
 Private Sub ResetUsersConnections()
@@ -1873,11 +1889,11 @@ End Sub
 Sub DropToNPC(ByVal UserIndex As Integer, ByVal tNPC As Integer, ByVal userSlot As Byte, ByVal Amount As Integer)
 '***************************************************
 'Autor: maTih.-
-'Last Modification: -
+'Last Modification: 16/01/2022 - ^[GS]^
 '
 '***************************************************
 
-On Error Resume Next
+On Error GoTo error
 
 With UserList(UserIndex)
 
@@ -1900,5 +1916,9 @@ Dim sellOk     As Boolean
      End If
         
 End With
+Exit Sub
+
+error:
+    Call LogError("DropToNPC: " & Err.Number & " - " & Err.description & " - Userindex: " & UserIndex)
 
 End Sub

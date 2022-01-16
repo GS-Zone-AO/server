@@ -77,7 +77,7 @@ On Error Resume Next
 
     LoadWorldGrid = False
     
-    If FileExist(sFile, vbArchive) = False Then Exit Function
+    Call FileRequired(sFile)
     
     Dim iGrid As Integer
     Dim handle As Integer
