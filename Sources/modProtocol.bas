@@ -656,9 +656,7 @@ Private Enum ServerPacketID
 End Enum
 
 Private Enum ClientPacketID
-    TorneoEventoInfo
-    TorneoEvento
-    
+    LoginToken              'GSZ Token Login
     LoginExistingChar       'OLOGIN
     ThrowDices              'TIRDAD
     LoginNewChar            'NLOGIN
@@ -789,6 +787,9 @@ Private Enum ClientPacketID
     ShareNpc                '/COMPARTIRNPC
     StopSharingNpc          '/NOCOMPARTIRNPC
     Consultation
+    
+    TorneoEventoInfo
+    TorneoEvento
     
     Quest                   ' GSZAO - /QUEST
     QuestAccept             ' GSZAO
@@ -1073,7 +1074,7 @@ End Sub
 Public Sub HandleIncomingData(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 16/01/2022 - ^[GS]^
+'Last Modification: 29/01/2022 - ^[GS]^
 '
 '***************************************************
 On Error Resume Next
@@ -1082,12 +1083,10 @@ On Error Resume Next
     
     packetID = UserList(UserIndex).incomingData.PeekByte()
     
-    'Does the packet requires a logged user??
-    If Not (packetID = ClientPacketID.ThrowDices _
-      Or packetID = ClientPacketID.LoginExistingChar _
-      Or packetID = ClientPacketID.LoginNewChar) Then
+    'Does the packet requires a logged account??
+    If Not (packetID = ClientPacketID.LoginToken) Then
         'Is the user actually logged?
-        If Not UserList(UserIndex).flags.UserLogged Then
+        If Not UserList(UserIndex).flags.AccountLogged Then
             Call CloseSocket(UserIndex)
             Exit Sub
         'He is logged. Reset idle counter if id is valid.
@@ -1097,7 +1096,7 @@ On Error Resume Next
     ElseIf packetID <= LAST_CLIENT_PACKET_ID Then
         UserList(UserIndex).Counters.IdleCount = 0
         'Is the user logged?
-        If UserList(UserIndex).flags.UserLogged Then
+        If UserList(UserIndex).flags.AccountLogged Then
             Call CloseSocket(UserIndex)
             Exit Sub
         End If
@@ -1109,12 +1108,9 @@ On Error Resume Next
     Debug.Print time & " - PacketID: " & packetID ' GSZ Debug
     
     Select Case packetID
-        
-        Case ClientPacketID.TorneoEventoInfo
-            Call HandlePedirInfoTorneo(UserIndex)
-            
-        Case ClientPacketID.TorneoEvento
-            Call HandleTorneoEvento(UserIndex)
+    
+        Case ClientPacketID.LoginToken
+            Call HandleLoginToken(UserIndex)
 
         Case ClientPacketID.LoginExistingChar       'OLOGIN
             Call HandleLoginExistingChar(UserIndex)
@@ -1505,6 +1501,12 @@ On Error Resume Next
             
         Case ClientPacketID.Consultation
             Call HandleConsultation(UserIndex)
+            
+        Case ClientPacketID.TorneoEventoInfo
+            Call HandlePedirInfoTorneo(UserIndex)
+            
+        Case ClientPacketID.TorneoEvento
+            Call HandleTorneoEvento(UserIndex)
             
         Case ClientPacketID.Quest                   ' GSZAO - /QUEST
             Call HandleQuest(UserIndex)
@@ -2150,6 +2152,75 @@ With UserList(UserIndex)
 End With
 End Sub
 
+Private Sub HandleLoginToken(ByVal UserIndex As Integer)
+'***************************************************
+'Author: Juan Martín Sotuyo Dodero (Maraxus)
+'Last Modification: 29/01/2022 - ^[GS]^
+'***************************************************
+    If UserList(UserIndex).incomingData.length < 6 Then
+        Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
+        Exit Sub
+    End If
+    
+On Error GoTo ErrHandler
+
+    'This packet contains strings, make a copy of the data to prevent losses if it's not complete yet...
+    Dim buffer As clsByteQueue: Set buffer = New clsByteQueue
+    Call buffer.CopyBuffer(UserList(UserIndex).incomingData)
+    
+    'Remove packet ID
+    Call buffer.ReadByte
+    
+    Dim Token As String
+    Dim Version As String
+    Dim SerialHD As Long ' GSZAO
+    Dim i As Byte
+    
+    Token = buffer.ReadASCIIString()
+    
+    If Not ValidJWT(Token) Then
+        Call WriteErrorMsg(UserIndex, "Token invalido. Vuelve a acceder para obtener un nuevo token.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        
+        Exit Sub
+    End If
+    
+    'Convert version number to string
+    Version = CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte())
+    
+    ' Serial del HD
+    SerialHD = val(SDesencriptar(buffer.ReadASCIIString())) ' GSZAO
+    
+    If BanHD_find(SerialHD) > 0 Then ' GSZAO
+        Call WriteErrorMsg(UserIndex, "Se te ha prohibido la entrada a Argentum Online debido a tu mal comportamiento. Puedes consultar el reglamento y el sistema de soporte desde " & iniWWW)
+    ElseIf Not VersionOK(Version) Then
+        Call WriteErrorMsg(UserIndex, "Esta versión del juego es obsoleta, la versión correcta es la " & iniVersion & ". La misma se encuentra disponible en " & iniWWW)
+    Else
+        Call WriteErrorMsg(UserIndex, "El token parece válido, pero aun no respuesta para él.")
+        'bConFailed = Not ConnectUser(UserIndex, UserName, Password, SerialHD) ' 0.13.5
+    End If
+    
+    Call FlushBuffer(UserIndex)
+    Call CloseSocket(UserIndex)
+    
+    Exit Sub
+    
+ErrHandler:
+    Dim error As Long
+    error = Err.Number
+On Error GoTo 0
+    
+    'Destroy auxiliar buffer
+    Set buffer = Nothing
+    
+    If error <> 0 Then
+        LogError "Error en HandleLoginToken: " & Err.description & "(" & error & "). Token:" & Token & _
+            ". UserIndex: " & UserIndex
+        Err.Raise error
+    End If
+End Sub
+
 
 ''
 ' Handles the "LoginExistingChar" message.
@@ -2237,7 +2308,6 @@ On Error GoTo 0
     If error <> 0 Then
         LogError "Error en HandleLoginExistingChar: " & Err.description & "(" & error & "). UserName:" & UserName & _
             ". UserIndex: " & UserIndex ' 0.13.5
-        
         Err.Raise error
     End If
 End Sub

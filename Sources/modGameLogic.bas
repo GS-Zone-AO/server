@@ -1626,3 +1626,22 @@ Public Function QuitarTildes(ByVal sString As String) As String
     QuitarTildes = Replace$(Replace$(Replace$(Replace$(Replace$(UCase$(sString), "Á", "A"), "É", "E"), "Í", "I"), "Ó", "O"), "Ú", "U")
  
 End Function
+
+Public Function ValidJWT(ByVal sToken As String) As Boolean
+
+    If Len(sToken) < 32 Then
+        ValidJWT = False
+        Exit Function
+    End If
+    
+    Dim sItems() As String
+    sItems = Split(sToken, ".")
+    ValidJWT = False
+
+    If (UBound(sItems) + 1) = 3 Then
+        If Len(sItems(0)) = 36 And Len(sItems(1)) > 180 And Len(sItems(2)) = 43 Then
+            ValidJWT = True
+        End If
+    End If
+
+End Function

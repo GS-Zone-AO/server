@@ -1166,10 +1166,11 @@ End Type
 'Flags
 Public Type UserFlags
     'Cuentas
+    AccountLogged As Boolean '¿Esta online la cuenta?
+    UserLogged As Boolean '¿Esta online con un pj?
     Muerto As Byte '¿Esta muerto?
     Escondido As Byte '¿Esta escondido?
     Comerciando As Boolean '¿Esta comerciando?
-    UserLogged As Boolean '¿Esta online?
     Meditando As Boolean
     Descuento As String
     Hambre As Byte
