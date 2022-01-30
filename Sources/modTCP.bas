@@ -196,6 +196,201 @@ End Select
 UserList(UserIndex).Char.Body = NewBody
 End Sub
 
+#If UsarQueSocket = 1 Or UsarQueSocket = 2 Then
+
+Sub CloseSocket(ByVal UserIndex As Integer)
+'***************************************************
+'Author: Unknownn
+'Last Modification: 27/07/2011 - ^[GS]^
+'***************************************************
+
+On Error GoTo ErrHandler
+    
+    With UserList(UserIndex)
+        
+        Call modSecurityIp.IpRestarConexion(GetLongIp(.ip))
+        
+        If .ConnID <> -1 Then
+            Call CloseSocketSL(UserIndex)
+        End If
+        
+        CloseSocketAtTorneo UserIndex
+        
+        'Es el mismo user al que está revisando el centinela??
+        'IMPORTANTE!!! hacerlo antes de resetear así todavía sabemos el nombre del user
+        ' y lo podemos loguear
+        Dim CentinelaIndex As Byte
+        CentinelaIndex = .flags.CentinelaIndex
+        
+        If CentinelaIndex <> 0 Then
+            Call modCentinela.CentinelaUserLogout(CentinelaIndex)
+        End If
+        
+        'mato los comercios seguros
+        If .ComUsu.DestUsu > 0 Then
+            If UserList(.ComUsu.DestUsu).flags.UserLogged Then
+                If UserList(.ComUsu.DestUsu).ComUsu.DestUsu = UserIndex Then
+                    Call WriteMensajes(.ComUsu.DestUsu, eMensajes.Mensaje001) '"Comercio cancelado por el otro usuario."
+                    Call FinComerciarUsu(.ComUsu.DestUsu)
+                    Call FlushBuffer(.ComUsu.DestUsu)
+                End If
+            End If
+        End If
+        
+        'Empty buffer for reuse
+        Call .incomingData.ReadASCIIStringFixed(.incomingData.length)
+        
+        .flags.AccountLogged = False
+        If .flags.UserLogged Then
+            If NumUsers > 0 Then NumUsers = NumUsers - 1
+            'Actualizo el frmMain. / maTih.-  |  02/03/2012
+            If frmMain.Visible Then frmMain.Escuch.Caption = CStr(NumUsers)
+            
+            Call CloseUser(UserIndex)
+            
+            'Call EstadisticasWeb.Informar(CANTIDAD_ONLINE, NumUsers)
+        Else
+            Call ResetUserSlot(UserIndex)
+        End If
+        
+        .ConnID = -1
+        .ConnIDValida = False
+        
+        
+        If UserIndex = LastUser Then
+            Do Until UserList(LastUser).ConnID <> -1
+                LastUser = LastUser - 1
+                If LastUser < 1 Then Exit Do
+            Loop
+        End If
+    End With
+    
+Exit Sub
+
+ErrHandler:
+    UserList(UserIndex).ConnID = -1
+    UserList(UserIndex).ConnIDValida = False
+    Call ResetUserSlot(UserIndex)
+    
+    If UserIndex = LastUser Then
+        Do Until UserList(LastUser).ConnID <> -1
+            LastUser = LastUser - 1
+            If LastUser < 1 Then Exit Do
+        Loop
+    End If
+
+    Call LogError("CloseSocket - Error = " & Err.Number & " - Descripción = " & Err.description & " - UserIndex = " & UserIndex)
+End Sub
+
+#ElseIf UsarQueSocket = 0 Then
+
+Sub CloseSocket(ByVal UserIndex As Integer)
+'***************************************************
+'Author: Unknownn
+'Last Modification: -
+'
+'***************************************************
+
+On Error GoTo ErrHandler
+    
+    
+    
+    UserList(UserIndex).ConnID = -1
+
+    If UserIndex = LastUser And LastUser > 1 Then
+        Do Until UserList(LastUser).flags.UserLogged
+            LastUser = LastUser - 1
+            If LastUser <= 1 Then Exit Do
+        Loop
+    End If
+
+    UserList(UserIndex).flags.AccountLogged = False
+    If UserList(UserIndex).flags.UserLogged Then
+            If NumUsers <> 0 Then NumUsers = NumUsers - 1
+            Call CloseUser(UserIndex)
+    End If
+
+    frmMain.Socket2(UserIndex).Cleanup
+    Unload frmMain.Socket2(UserIndex)
+    Call ResetUserSlot(UserIndex)
+
+Exit Sub
+
+ErrHandler:
+    UserList(UserIndex).ConnID = -1
+    Call ResetUserSlot(UserIndex)
+End Sub
+
+
+#ElseIf UsarQueSocket = 3 Then
+
+Sub CloseSocket(ByVal UserIndex As Integer, Optional ByVal cerrarlo As Boolean = True)
+'***************************************************
+'Author: Unknownn
+'Last Modification: -
+'
+'***************************************************
+On Error GoTo ErrHandler
+
+Dim NURestados As Boolean
+Dim CoNnEcTiOnId As Long
+
+
+    NURestados = False
+    CoNnEcTiOnId = UserList(UserIndex).ConnID
+    
+    'call logindex(UserIndex, "******> Sub CloseSocket. ConnId: " & CoNnEcTiOnId & " Cerrarlo: " & Cerrarlo)
+    
+    
+  
+    UserList(UserIndex).ConnID = -1 'inabilitamos operaciones en socket
+
+    If UserIndex = LastUser And LastUser > 1 Then
+        Do
+            LastUser = LastUser - 1
+            If LastUser <= 1 Then Exit Do
+        Loop While UserList(LastUser).flags.UserLogged = True
+    End If
+
+    UserList(UserIndex).flags.AccountLogged = False
+    If UserList(UserIndex).flags.UserLogged Then
+            If NumUsers <> 0 Then NumUsers = NumUsers - 1
+            NURestados = True
+            Call CloseUser(UserIndex)
+    End If
+    
+    Call ResetUserSlot(UserIndex)
+    
+    'limpiada la userlist... reseteo el socket, si me lo piden
+    'Me lo piden desde: cerrada intecional del servidor (casi todas
+    'las llamadas a CloseSocket del codigo)
+    'No me lo piden desde: disconnect remoto (el on_close del control
+    'de alejo realiza la desconexion automaticamente). Esto puede pasar
+    'por ejemplo, si el cliente cierra el AO.
+    If cerrarlo Then Call frmMain.TCPServ.CerrarSocket(CoNnEcTiOnId)
+
+Exit Sub
+
+ErrHandler:
+    Call LogError("CLOSESOCKETERR: " & Err.description & " UI:" & UserIndex)
+    
+    If Not NURestados Then
+        If UserList(UserIndex).flags.UserLogged Then
+            If NumUsers > 0 Then
+                NumUsers = NumUsers - 1
+            End If
+            Call LogError("Cerre sin grabar a: " & UserList(UserIndex).Name)
+        End If
+    End If
+    
+    Call LogError("El usuario no guardado tenía connid " & CoNnEcTiOnId & ". Socket no liberado.")
+    Call ResetUserSlot(UserIndex)
+
+End Sub
+
+
+#End If
+
 Private Function ValidarCabeza(ByVal UserRaza As Byte, ByVal UserGenero As Byte, ByVal Head As Integer) As Boolean
 
 Select Case UserGenero
@@ -625,198 +820,6 @@ Call ConnectUser(UserIndex, Name, Password, SerialHD)
   
 End Sub
 
-#If UsarQueSocket = 1 Or UsarQueSocket = 2 Then
-
-Sub CloseSocket(ByVal UserIndex As Integer)
-'***************************************************
-'Author: Unknownn
-'Last Modification: 27/07/2011 - ^[GS]^
-'***************************************************
-
-On Error GoTo ErrHandler
-    
-    With UserList(UserIndex)
-        
-        Call modSecurityIp.IpRestarConexion(GetLongIp(.ip))
-        
-        If .ConnID <> -1 Then
-            Call CloseSocketSL(UserIndex)
-        End If
-        
-        CloseSocketAtTorneo UserIndex
-        
-        'Es el mismo user al que está revisando el centinela??
-        'IMPORTANTE!!! hacerlo antes de resetear así todavía sabemos el nombre del user
-        ' y lo podemos loguear
-        Dim CentinelaIndex As Byte
-        CentinelaIndex = .flags.CentinelaIndex
-        
-        If CentinelaIndex <> 0 Then
-            Call modCentinela.CentinelaUserLogout(CentinelaIndex)
-        End If
-        
-        'mato los comercios seguros
-        If .ComUsu.DestUsu > 0 Then
-            If UserList(.ComUsu.DestUsu).flags.UserLogged Then
-                If UserList(.ComUsu.DestUsu).ComUsu.DestUsu = UserIndex Then
-                    Call WriteMensajes(.ComUsu.DestUsu, eMensajes.Mensaje001) '"Comercio cancelado por el otro usuario."
-                    Call FinComerciarUsu(.ComUsu.DestUsu)
-                    Call FlushBuffer(.ComUsu.DestUsu)
-                End If
-            End If
-        End If
-        
-        'Empty buffer for reuse
-        Call .incomingData.ReadASCIIStringFixed(.incomingData.length)
-        
-        If .flags.UserLogged Then
-            If NumUsers > 0 Then NumUsers = NumUsers - 1
-            'Actualizo el frmMain. / maTih.-  |  02/03/2012
-            If frmMain.Visible Then frmMain.Escuch.Caption = CStr(NumUsers)
-            
-            Call CloseUser(UserIndex)
-            
-            'Call EstadisticasWeb.Informar(CANTIDAD_ONLINE, NumUsers)
-        Else
-            Call ResetUserSlot(UserIndex)
-        End If
-        
-        .ConnID = -1
-        .ConnIDValida = False
-        
-        
-        If UserIndex = LastUser Then
-            Do Until UserList(LastUser).ConnID <> -1
-                LastUser = LastUser - 1
-                If LastUser < 1 Then Exit Do
-            Loop
-        End If
-    End With
-    
-Exit Sub
-
-ErrHandler:
-    UserList(UserIndex).ConnID = -1
-    UserList(UserIndex).ConnIDValida = False
-    Call ResetUserSlot(UserIndex)
-    
-    If UserIndex = LastUser Then
-        Do Until UserList(LastUser).ConnID <> -1
-            LastUser = LastUser - 1
-            If LastUser < 1 Then Exit Do
-        Loop
-    End If
-
-    Call LogError("CloseSocket - Error = " & Err.Number & " - Descripción = " & Err.description & " - UserIndex = " & UserIndex)
-End Sub
-
-#ElseIf UsarQueSocket = 0 Then
-
-Sub CloseSocket(ByVal UserIndex As Integer)
-'***************************************************
-'Author: Unknownn
-'Last Modification: -
-'
-'***************************************************
-
-On Error GoTo ErrHandler
-    
-    
-    
-    UserList(UserIndex).ConnID = -1
-
-    If UserIndex = LastUser And LastUser > 1 Then
-        Do Until UserList(LastUser).flags.UserLogged
-            LastUser = LastUser - 1
-            If LastUser <= 1 Then Exit Do
-        Loop
-    End If
-
-    If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers <> 0 Then NumUsers = NumUsers - 1
-            Call CloseUser(UserIndex)
-    End If
-
-    frmMain.Socket2(UserIndex).Cleanup
-    Unload frmMain.Socket2(UserIndex)
-    Call ResetUserSlot(UserIndex)
-
-Exit Sub
-
-ErrHandler:
-    UserList(UserIndex).ConnID = -1
-    Call ResetUserSlot(UserIndex)
-End Sub
-
-
-#ElseIf UsarQueSocket = 3 Then
-
-Sub CloseSocket(ByVal UserIndex As Integer, Optional ByVal cerrarlo As Boolean = True)
-'***************************************************
-'Author: Unknownn
-'Last Modification: -
-'
-'***************************************************
-On Error GoTo ErrHandler
-
-Dim NURestados As Boolean
-Dim CoNnEcTiOnId As Long
-
-
-    NURestados = False
-    CoNnEcTiOnId = UserList(UserIndex).ConnID
-    
-    'call logindex(UserIndex, "******> Sub CloseSocket. ConnId: " & CoNnEcTiOnId & " Cerrarlo: " & Cerrarlo)
-    
-    
-  
-    UserList(UserIndex).ConnID = -1 'inabilitamos operaciones en socket
-
-    If UserIndex = LastUser And LastUser > 1 Then
-        Do
-            LastUser = LastUser - 1
-            If LastUser <= 1 Then Exit Do
-        Loop While UserList(LastUser).flags.UserLogged = True
-    End If
-
-    If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers <> 0 Then NumUsers = NumUsers - 1
-            NURestados = True
-            Call CloseUser(UserIndex)
-    End If
-    
-    Call ResetUserSlot(UserIndex)
-    
-    'limpiada la userlist... reseteo el socket, si me lo piden
-    'Me lo piden desde: cerrada intecional del servidor (casi todas
-    'las llamadas a CloseSocket del codigo)
-    'No me lo piden desde: disconnect remoto (el on_close del control
-    'de alejo realiza la desconexion automaticamente). Esto puede pasar
-    'por ejemplo, si el cliente cierra el AO.
-    If cerrarlo Then Call frmMain.TCPServ.CerrarSocket(CoNnEcTiOnId)
-
-Exit Sub
-
-ErrHandler:
-    Call LogError("CLOSESOCKETERR: " & Err.description & " UI:" & UserIndex)
-    
-    If Not NURestados Then
-        If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers > 0 Then
-                NumUsers = NumUsers - 1
-            End If
-            Call LogError("Cerre sin grabar a: " & UserList(UserIndex).Name)
-        End If
-    End If
-    
-    Call LogError("El usuario no guardado tenía connid " & CoNnEcTiOnId & ". Socket no liberado.")
-    Call ResetUserSlot(UserIndex)
-
-End Sub
-
-
-#End If
-
 '[Alejo-21-5]: Cierra un socket sin limpiar el slot
 Sub CloseSocketSL(ByVal UserIndex As Integer)
 '***************************************************
@@ -1003,6 +1006,70 @@ Function ValidateChr(ByVal UserIndex As Integer) As Boolean
 '***************************************************
 
 ValidateChr = UserList(UserIndex).Char.Head <> 0 And UserList(UserIndex).Char.Body <> 0 And ValidateSkills(UserIndex)
+
+End Function
+
+Private Function GetHTMLSource(ByVal sURL As String) As String
+'***************************************************
+'Autor: ^[GS]^
+'Last Modification: 29/01/2022 - ^[GS]^
+'
+'***************************************************
+
+    Dim xmlHttp As Object
+
+    Set xmlHttp = CreateObject("MSXML2.XmlHttp")
+    xmlHttp.Open "GET", sURL, False
+    xmlHttp.send
+    GetHTMLSource = xmlHttp.responseText
+    Set xmlHttp = Nothing
+    
+End Function
+
+Public Function ConnectAccount(ByVal UserIndex As Integer, ByVal Token As String) As Boolean
+'***************************************************
+'Autor: ^[GS]^
+'Last Modification: 29/01/2022 - ^[GS]^
+'
+'***************************************************
+
+ConnectAccount = False ' Por defecto, es FALSE
+
+With UserList(UserIndex)
+
+    If .flags.AccountLogged Then
+        Call LogCheating("La cuenta " & .AccountName & " ha intentado loguear desde la IP " & .ip)
+        'Kick player ( and leave character inside :D )!
+        Call CloseSocketSL(UserIndex)
+        Call Cerrar_Usuario(UserIndex)
+        Exit Function
+    End If
+    
+    Dim sURL As String
+    Dim sGet As String
+    
+    sURL = "https://www.gs-zone.org/login_auth.php?&code=gszoneao&key=demo&token=" & Token
+    sGet = GetHTMLSource(sURL)
+    Dim sItems() As String
+    
+    Debug.Print sGet 'DEBUG
+
+    sItems = Split(sGet, ";")
+    If (UBound(sItems) + 1) <> 3 Then
+        Call WriteErrorMsg(UserIndex, "Token invalido. Vuelve a acceder para obtener un nuevo token.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        Exit Function
+    End If
+    
+    .AccountID = CLng(sItems(0))
+    .AccountName = sItems(1)
+    .AccountHash = sItems(2)
+    .flags.AccountLogged = True
+    
+    ConnectAccount = True
+    
+End With
 
 End Function
 
@@ -1901,6 +1968,7 @@ With UserList(UserIndex)
     .Char.loops = 0
     Call SendData(SendTarget.ToPCArea, UserIndex, PrepareMessageCreateFX(.Char.CharIndex, 0, 0))
     
+    .flags.AccountLogged = False
     .flags.UserLogged = False
     .Counters.Saliendo = False
     

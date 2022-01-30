@@ -1167,6 +1167,7 @@ End Type
 Public Type UserFlags
     'Cuentas
     AccountLogged As Boolean '¿Esta online la cuenta?
+    'Char
     UserLogged As Boolean '¿Esta online con un pj?
     Muerto As Byte '¿Esta muerto?
     Escondido As Byte '¿Esta escondido?
@@ -1369,6 +1370,11 @@ End Enum
 
 'Tipo de los Usuarios
 Public Type User
+
+    AccountID As Long
+    AccountName As String
+    AccountHash As String
+
     IndexPJ As Integer ' ID de la Base de datos /// CASTELLI (FEDUDOK)
     Name    As String
     ID      As Long

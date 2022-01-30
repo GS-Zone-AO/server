@@ -555,7 +555,7 @@ On Error GoTo ErrHandler
         Dim NPCPosX As Integer
         Dim NPCPosY As Integer
         
-        Dim Userindex As Integer
+        Dim UserIndex As Integer
         Dim Counter As Long
         
         Dim BestTargetDistance As Integer
@@ -585,24 +585,24 @@ On Error GoTo ErrHandler
         ' Search for the best user target
         For Counter = CounterStart To CounterEnd Step CounterStep
         
-            Userindex = ModAreas.ConnGroups(mapa).UserEntrys(Counter)
+            UserIndex = ModAreas.ConnGroups(mapa).UserEntrys(Counter)
             
             'Is it in it's range of vision??
-            If InVisionRange(Userindex, NPCPosX, NPCPosY) Then
+            If InVisionRange(UserIndex, NPCPosX, NPCPosY) Then
                 ' Can be atacked? If it's blinded, doesn't count.
-                If UserAtacable(Userindex) And UserList(Userindex).flags.Ceguera = 0 Then
+                If UserAtacable(UserIndex) And UserList(UserIndex).flags.Ceguera = 0 Then
                     ' if previous user choosen, select the better
                     If BestTarget <> 0 Then
                         ' Has priority to attack the nearest
-                        Distance = UserDistance(Userindex, NPCPosX, NPCPosY)
+                        Distance = UserDistance(UserIndex, NPCPosX, NPCPosY)
                         
                         If Distance < BestTargetDistance Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             BestTargetDistance = Distance
                         End If
                     Else
-                        BestTarget = Userindex
-                        BestTargetDistance = UserDistance(Userindex, NPCPosX, NPCPosY)
+                        BestTarget = UserIndex
+                        BestTargetDistance = UserDistance(UserIndex, NPCPosX, NPCPosY)
                     End If
                 End If
             End If
@@ -713,7 +713,7 @@ On Error GoTo ErrHandler
     Dim headingloop As Byte
     Dim nPos As WorldPos
     
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     
     With Npclist(NpcIndex)
     
@@ -727,10 +727,10 @@ On Error GoTo ErrHandler
             ' In map Limits?
             If InMapBounds(nPos.Map, nPos.X, nPos.Y) Then
             
-                Userindex = MapData(nPos.Map, nPos.X, nPos.Y).Userindex
-                If Userindex > 0 Then
-                    If UserAtacable(Userindex, False) Then
-                        If NpcAtacaUser(NpcIndex, Userindex) Then
+                UserIndex = MapData(nPos.Map, nPos.X, nPos.Y).UserIndex
+                If UserIndex > 0 Then
+                    If UserAtacable(UserIndex, False) Then
+                        If NpcAtacaUser(NpcIndex, UserIndex) Then
                             Call ChangeNPCChar(NpcIndex, .Char.Body, .Char.Head, headingloop)
                         End If
                     
@@ -858,7 +858,7 @@ Private Function HealerBestTarget(ByVal NpcIndex As Integer, ByRef Accion As Byt
 
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim PetIndex As Integer
@@ -889,13 +889,13 @@ On Error GoTo ErrHandler
     
     For Counter = CounterStart To CounterEnd Step CounterStep
     
-        Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+        UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
         
         ' Can be atacked (doesn't matter if invisible or hidden)?
-        If UserAtacable(Userindex, False) Then
+        If UserAtacable(UserIndex, False) Then
                 
             ' Checks if ther's a non-paralized user pet in range. If so, then paralize it.
-            PetIndex = CheckNearUserPets(NpcIndex, Userindex)
+            PetIndex = CheckNearUserPets(NpcIndex, UserIndex)
             If PetIndex <> 0 Then
                 BestTarget = PetIndex
                 Accion = eHealerAction.ParalizePet
@@ -903,9 +903,9 @@ On Error GoTo ErrHandler
             End If
                 
             'Is it in it's range of vision??
-            If InVisionRange(Userindex, NpcX, NpcY) Then
+            If InVisionRange(UserIndex, NpcX, NpcY) Then
                 
-                With UserList(Userindex)
+                With UserList(UserIndex)
                     
                     ' It's Paralized?
                     If .flags.Paralizado = 0 Then
@@ -913,7 +913,7 @@ On Error GoTo ErrHandler
                         ' It's visible?
                         If (.flags.Invisible = 0) And (.flags.Oculto = 0) Then
                             
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             Accion = eHealerAction.ParalizeUser
                             
                         End If
@@ -921,7 +921,7 @@ On Error GoTo ErrHandler
                     ' User Paralized, if not better target found then attack it
                     ElseIf BestTarget = 0 Then
 
-                        BestTarget = Userindex
+                        BestTarget = UserIndex
                         Accion = eHealerAction.AttackUser
                         
                     End If
@@ -1093,7 +1093,7 @@ Private Function SpellCasterBestTarget(ByVal NpcIndex As Integer, ByRef Accion A
 
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim BestTarget As Integer
@@ -1122,28 +1122,28 @@ On Error GoTo ErrHandler
     
     For Counter = CounterStart To CounterEnd Step CounterStep
     
-        Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+        UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
         
         'Is it in it's range of vision??
-        If InVisionRange(Userindex, NpcX, NpcY) Then
+        If InVisionRange(UserIndex, NpcX, NpcY) Then
             
             ' Can be atacked?
-            If UserAtacable(Userindex, False) Then
+            If UserAtacable(UserIndex, False) Then
                 
-                With UserList(Userindex)
+                With UserList(UserIndex)
                     ' It's invisible?
                     If (.flags.Invisible = 1) Or (.flags.Oculto = 1) Then
                         
                         ' Try to remove invisibility
                         If (RandomNumber(1, 100) <= 35) Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             Accion = eSpellCasterAction.RemoveInvi
                             Exit For
                         End If
                         
                         ' Paralized invisible users are good target!
                         If .flags.Paralizado = 1 Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             BestTargetInvisible = True
                             Accion = eSpellCasterAction.Attack
                         End If
@@ -1153,14 +1153,14 @@ On Error GoTo ErrHandler
                         
                         ' If not found an invisible and paralized target, then it's a good one
                         If Not BestTargetInvisible Or BestTarget = 0 Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             Accion = eSpellCasterAction.Attack
                         End If
                     
                     ' Visible and can move, if not better found then choose it
                     ElseIf BestTarget = 0 Then
 
-                        BestTarget = Userindex
+                        BestTarget = UserIndex
                         Accion = eSpellCasterAction.Attack
                         
                     End If
@@ -1279,7 +1279,7 @@ Private Sub DealWandDamage(ByVal NpcIndex As Integer, ByVal SpellIndex As Intege
 '***************************************************
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim Distancia As Integer
@@ -1295,32 +1295,32 @@ On Error GoTo ErrHandler
         
         For Counter = 1 To ModAreas.ConnGroups(CenterPos.Map).CountEntrys
             
-            Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+            UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
             
-            If Userindex <> 0 Then
+            If UserIndex <> 0 Then
             
-                With UserList(Userindex)
+                With UserList(UserIndex)
                     
-                    If UserAtacable(Userindex, False, False) Then
+                    If UserAtacable(UserIndex, False, False) Then
                         
-                        Distancia = UserDistance(Userindex, X, Y)
+                        Distancia = UserDistance(UserIndex, X, Y)
                         Danio = Abs(Int(880 / (Distancia ^ (3 / 7))))
                         
                         .Stats.MinHp = .Stats.MinHp - Danio
                         
-                        Call WriteConsoleMsg(Userindex, Npclist(NpcIndex).Name & " te ha quitado " & Danio & " puntos de vida al romper su vara.", FontTypeNames.FONTTYPE_FIGHT)
-                        Call SendData(SendTarget.ToPCArea, Userindex, PrepareMessagePlayWave(Hechizos(SpellIndex).WAV, .Pos.X, .Pos.Y))
-                        Call SendData(SendTarget.ToPCArea, Userindex, PrepareMessageCreateFX(.Char.CharIndex, Hechizos(SpellIndex).FXgrh, Hechizos(SpellIndex).loops))
+                        Call WriteConsoleMsg(UserIndex, Npclist(NpcIndex).Name & " te ha quitado " & Danio & " puntos de vida al romper su vara.", FontTypeNames.FONTTYPE_FIGHT)
+                        Call SendData(SendTarget.ToPCArea, UserIndex, PrepareMessagePlayWave(Hechizos(SpellIndex).WAV, .Pos.X, .Pos.Y))
+                        Call SendData(SendTarget.ToPCArea, UserIndex, PrepareMessageCreateFX(.Char.CharIndex, Hechizos(SpellIndex).FXgrh, Hechizos(SpellIndex).loops))
                         
                         If .Stats.MinHp < 1 Then
                             .Stats.MinHp = 0
-                            Call UserDie(Userindex)
+                            Call UserDie(UserIndex)
                         Else
                             'Updates user's hp:
-                            Call WriteUpdateHP(Userindex)
+                            Call WriteUpdateHP(UserIndex)
                             ' Also hit pets
                             If .NroMascotas > 0 Then _
-                                Call DealWandDamageToPets(NpcIndex, Userindex, SpellIndex)
+                                Call DealWandDamageToPets(NpcIndex, UserIndex, SpellIndex)
                             
                         End If
                         
@@ -1340,7 +1340,7 @@ ErrHandler:
     LogError ("Error en DealWandDamage. Error: " & Err.Number & " - " & Err.description)
 End Sub
 
-Private Sub DealWandDamageToPets(ByVal NpcIndex As Integer, ByVal Userindex As Integer, ByVal SpellIndex As Integer)
+Private Sub DealWandDamageToPets(ByVal NpcIndex As Integer, ByVal UserIndex As Integer, ByVal SpellIndex As Integer)
 '***************************************************
 'Author: ZaMa
 'Last Modification: 26/09/2010
@@ -1362,7 +1362,7 @@ On Error GoTo ErrHandler
     
     For PetCounter = 1 To MAXMASCOTAS
                                     
-        PetIndex = UserList(Userindex).MascotasIndex(PetCounter)
+        PetIndex = UserList(UserIndex).MascotasIndex(PetCounter)
         If PetIndex > 0 Then
            With Npclist(PetIndex)
            
@@ -1424,7 +1424,7 @@ Private Function SwordMasterBestTarget(ByVal NpcIndex As Integer) As Integer
 
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim BestTarget As Integer
@@ -1455,29 +1455,29 @@ On Error GoTo ErrHandler
     
     For Counter = CounterStart To CounterEnd Step CounterStep
     
-        Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+        UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
         
         'Is it in it's range of vision??
-        If InVisionRange(Userindex, NpcX, NpcY) Then
+        If InVisionRange(UserIndex, NpcX, NpcY) Then
             
             ' Can be atacked?
-            If UserAtacable(Userindex) Then
+            If UserAtacable(UserIndex) Then
                 ' Checks limits in order to avoid to separate it from the rest of the clan
-                If UserReachable(NpcIndex, Userindex) Then
+                If UserReachable(NpcIndex, UserIndex) Then
                 
                     If BestTarget <> 0 Then
                         
                         ' Has priority to attack the nearest
-                        Distance = UserDistance(Userindex, NpcX, NpcY)
+                        Distance = UserDistance(UserIndex, NpcX, NpcY)
                         
                         If Distance < BestTargetDistance Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             BestTargetDistance = Distance
                         End If
                         
                     Else
-                        BestTarget = Userindex
-                        BestTargetDistance = UserDistance(Userindex, NpcX, NpcY)
+                        BestTarget = UserIndex
+                        BestTargetDistance = UserDistance(UserIndex, NpcX, NpcY)
                     End If
                 
                 End If
@@ -1552,7 +1552,7 @@ On Error GoTo ErrHandler
 
     Dim headingloop As Byte
     Dim NpcPos As WorldPos
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     
     With Npclist(NpcIndex)
     
@@ -1562,11 +1562,11 @@ On Error GoTo ErrHandler
             NpcPos = .Pos
             Call HeadtoPos(headingloop, NpcPos)
             
-            Userindex = MapData(NpcPos.Map, NpcPos.X, NpcPos.Y).Userindex
+            UserIndex = MapData(NpcPos.Map, NpcPos.X, NpcPos.Y).UserIndex
             
-            If Userindex > 0 Then
-                If UserAtacable(Userindex, False) Then
-                    If NpcAtacaUser(NpcIndex, Userindex) Then
+            If UserIndex > 0 Then
+                If UserAtacable(UserIndex, False) Then
+                    If NpcAtacaUser(NpcIndex, UserIndex) Then
                         Call ChangeNPCChar(NpcIndex, .Char.Body, .Char.Head, headingloop)
                         Exit For
                     End If
@@ -1620,7 +1620,7 @@ Private Function ShooterBestTarget(ByVal NpcIndex As Integer) As Integer
 
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim BestTarget As Integer
@@ -1651,32 +1651,32 @@ On Error GoTo ErrHandler
     
     For Counter = CounterStart To CounterEnd Step CounterStep
     
-        Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+        UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
         
         'Is it in it's range of vision??
-        If InVisionRange(Userindex, NpcX, NpcY) Then
+        If InVisionRange(UserIndex, NpcX, NpcY) Then
             
             ' Can be atacked?
-            If UserAtacable(Userindex) Then
+            If UserAtacable(UserIndex) Then
                 
                 ' Has Priority to attack magic clases
-                If EsClaseMagica(Userindex) Then
-                    BestTarget = Userindex
+                If EsClaseMagica(UserIndex) Then
+                    BestTarget = UserIndex
                     Exit For
                 Else
                     If BestTarget <> 0 Then
                         
                         ' Has priority to attack the nearest
-                        Distance = UserDistance(Userindex, NpcX, NpcY)
+                        Distance = UserDistance(UserIndex, NpcX, NpcY)
                         
                         If Distance < BestTargetDistance Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             BestTargetDistance = Distance
                         End If
                         
                     Else
-                        BestTarget = Userindex
-                        BestTargetDistance = UserDistance(Userindex, NpcX, NpcY)
+                        BestTarget = UserIndex
+                        BestTargetDistance = UserDistance(UserIndex, NpcX, NpcY)
                     End If
                     
                 End If
@@ -1738,19 +1738,19 @@ On Error GoTo ErrHandler
         
             ' Search for aproaching enemies
             Dim Counter As Long
-            Dim Userindex As Integer
+            Dim UserIndex As Integer
             
             For Counter = 1 To ModAreas.ConnGroups(CenterPos.Map).CountEntrys
             
-                Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+                UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
                 
                 'Is it in extended range of vision from center position??
-                If InVisionRange(Userindex, CenterPos.X, CenterPos.Y, True) Then
+                If InVisionRange(UserIndex, CenterPos.X, CenterPos.Y, True) Then
                     
                     ' Can be atacked?
-                    If UserAtacable(Userindex) Then
+                    If UserAtacable(UserIndex) Then
                         
-                        With UserList(Userindex)
+                        With UserList(UserIndex)
                             Call GreedyWalkTo(NpcIndex, CenterPos.Map, .Pos.X, .Pos.Y)
                         End With
                         
@@ -1805,7 +1805,7 @@ Private Function ThiefBestTarget(ByVal NpcIndex As Integer, ByRef Action As Byte
 
 On Error GoTo ErrHandler
 
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     Dim Counter As Long
     
     Dim BestTarget As Integer
@@ -1836,36 +1836,36 @@ On Error GoTo ErrHandler
     
     For Counter = CounterStart To CounterEnd Step CounterStep
     
-        Userindex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
+        UserIndex = ModAreas.ConnGroups(CenterPos.Map).UserEntrys(Counter)
         
         'Is it in it's range of vision??
-        If InVisionRange(Userindex, NpcX, NpcY) Then
+        If InVisionRange(UserIndex, NpcX, NpcY) Then
             
             ' Can be atacked?
-            If UserAtacable(Userindex, False) Then
+            If UserAtacable(UserIndex, False) Then
                 ' Checks limits in order to avoid to separate it from the rest of the clan
-                If UserReachable(NpcIndex, Userindex) Then
+                If UserReachable(NpcIndex, UserIndex) Then
                 
                     ' Is it a hunter? => Has priority
-                    If UserList(Userindex).clase = eClass.Hunter Then
-                        BestTarget = Userindex
-                        BestTargetDistance = UserDistance(Userindex, NpcX, NpcY)
+                    If UserList(UserIndex).clase = eClass.Hunter Then
+                        BestTarget = UserIndex
+                        BestTargetDistance = UserDistance(UserIndex, NpcX, NpcY)
                         Exit For
                     End If
                     
                     If BestTarget <> 0 Then
                         
                         ' Has priority to attack the nearest
-                        Distance = UserDistance(Userindex, NpcX, NpcY)
+                        Distance = UserDistance(UserIndex, NpcX, NpcY)
                         
                         If Distance < BestTargetDistance Then
-                            BestTarget = Userindex
+                            BestTarget = UserIndex
                             BestTargetDistance = Distance
                         End If
                         
                     Else
-                        BestTarget = Userindex
-                        BestTargetDistance = UserDistance(Userindex, NpcX, NpcY)
+                        BestTarget = UserIndex
+                        BestTargetDistance = UserDistance(UserIndex, NpcX, NpcY)
                     End If
                 
                 End If
@@ -2112,7 +2112,7 @@ Private Function TargetClose(ByRef Pos As WorldPos) As Boolean
 'Last Modification: 05/07/2010
 'Checks if there is any attackable user sorrounding the given position.
 '***************************************************
-    Dim Userindex As Integer
+    Dim UserIndex As Integer
     
     Dim nPos As WorldPos
     Dim headingloop As Byte
@@ -2122,10 +2122,10 @@ Private Function TargetClose(ByRef Pos As WorldPos) As Boolean
         nPos = Pos
         Call HeadtoPos(headingloop, nPos)
         
-        Userindex = MapData(nPos.Map, nPos.X, nPos.Y).Userindex
+        UserIndex = MapData(nPos.Map, nPos.X, nPos.Y).UserIndex
         
-        If Userindex <> 0 Then
-            If UserAtacable(Userindex) Then
+        If UserIndex <> 0 Then
+            If UserAtacable(UserIndex) Then
                 TargetClose = True
                 Exit Function
             End If
@@ -2134,7 +2134,7 @@ Private Function TargetClose(ByRef Pos As WorldPos) As Boolean
     
 End Function
 
-Private Function CheckNearUserPets(ByVal NpcIndex As Integer, ByVal Userindex As Integer) As Integer
+Private Function CheckNearUserPets(ByVal NpcIndex As Integer, ByVal UserIndex As Integer) As Integer
 '***************************************************
 'Author: ZaMa
 'Last Modification: 09/07/2010
@@ -2143,7 +2143,7 @@ Private Function CheckNearUserPets(ByVal NpcIndex As Integer, ByVal Userindex As
     Dim PetCounter As Long
     Dim PetIndex As Integer
     
-    With UserList(Userindex)
+    With UserList(UserIndex)
         
         If .NroMascotas = 0 Then Exit Function
         
@@ -2175,14 +2175,14 @@ Private Function CheckNearUserPets(ByVal NpcIndex As Integer, ByVal Userindex As
 
 End Function
 
-Private Function EsClaseMagica(ByVal Userindex As Integer) As Boolean
+Private Function EsClaseMagica(ByVal UserIndex As Integer) As Boolean
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
 '***************************************************
 On Error GoTo ErrHandler
 
-    With UserList(Userindex)
+    With UserList(UserIndex)
         EsClaseMagica = .clase = eClass.Mage Or _
                         .clase = eClass.Cleric Or _
                         .clase = eClass.Druid Or _
@@ -2472,7 +2472,7 @@ ErrHandler:
     LogError ("Error en FarFromTeam. Error: " & Err.Number & " - " & Err.description)
 End Function
 
-Private Function UserReachable(ByVal NpcIndex As Integer, ByVal Userindex As Integer) As Boolean
+Private Function UserReachable(ByVal NpcIndex As Integer, ByVal UserIndex As Integer) As Boolean
 '***************************************************
 'Author: ZaMa
 'Last Modification: 19/09/2010
@@ -2482,8 +2482,8 @@ On Error GoTo ErrHandler
         
     If Npclist(NpcIndex).Pos.Map <> CenterPos.Map Then Exit Function
 
-    UserReachable = (Abs(UserList(Userindex).Pos.X - CenterPos.X) < MAX_DISTANCE) And _
-                    (Abs(UserList(Userindex).Pos.Y - CenterPos.Y) < MAX_DISTANCE)
+    UserReachable = (Abs(UserList(UserIndex).Pos.X - CenterPos.X) < MAX_DISTANCE) And _
+                    (Abs(UserList(UserIndex).Pos.Y - CenterPos.Y) < MAX_DISTANCE)
     
     
     Exit Function
@@ -2492,7 +2492,7 @@ ErrHandler:
     LogError ("Error en UserReachable. Error: " & Err.Number & " - " & Err.description)
 End Function
 
-Private Function InVisionRange(ByVal Userindex As Integer, ByVal X As Integer, ByVal Y As Integer, _
+Private Function InVisionRange(ByVal UserIndex As Integer, ByVal X As Integer, ByVal Y As Integer, _
                                Optional ByVal ExtendedRange As Boolean = False) As Boolean
 '***************************************************
 'Author: ZaMa
@@ -2503,7 +2503,7 @@ Private Function InVisionRange(ByVal Userindex As Integer, ByVal X As Integer, B
     Dim Rango As Integer
     Rango = val(IIf(ExtendedRange, 2, 1))
     
-    With UserList(Userindex)
+    With UserList(UserIndex)
         InVisionRange = Abs(.Pos.X - X) <= RANGO_VISION_X * Rango And _
                         Abs(.Pos.Y - Y) <= RANGO_VISION_Y * Rango
     End With
@@ -2528,7 +2528,7 @@ Private Function InVisionRangeNpc(ByVal NpcIndex As Integer, ByVal X As Integer,
     
 End Function
 
-Private Function UserAtacable(ByVal Userindex As Integer, Optional ByVal CheckVisibility As Boolean = True, _
+Private Function UserAtacable(ByVal UserIndex As Integer, Optional ByVal CheckVisibility As Boolean = True, _
                               Optional ByVal AttackAdmin As Boolean = True) As Boolean
 '***************************************************
 'Author: ZaMa
@@ -2537,7 +2537,7 @@ Private Function UserAtacable(ByVal Userindex As Integer, Optional ByVal CheckVi
 '05/10/2010: ZaMa - Now doesn't allow to attack admins sometimes.
 '***************************************************
 
-    With UserList(Userindex).flags
+    With UserList(UserIndex).flags
         UserAtacable = Not .EnConsulta And _
                        .AdminInvisible = 0 And _
                        .AdminPerseguible And _
@@ -2550,21 +2550,21 @@ Private Function UserAtacable(ByVal Userindex As Integer, Optional ByVal CheckVi
         End If
         
         If Not AttackAdmin Then
-            UserAtacable = UserAtacable And (Not EsGm(Userindex))
+            UserAtacable = UserAtacable And (Not EsGm(UserIndex))
         End If
         
     End With
                         
 End Function
 
-Private Function UserDistance(ByVal Userindex As Integer, ByVal X As Integer, ByVal Y As Integer) As Integer
+Private Function UserDistance(ByVal UserIndex As Integer, ByVal X As Integer, ByVal Y As Integer) As Integer
 '***************************************************
 'Author: ZaMa
 'Last Modification: 24/06/2010
 'Calculates the user distance according to the given coords.
 '***************************************************
 
-    With UserList(Userindex)
+    With UserList(UserIndex)
         UserDistance = Abs(X - .Pos.X) + Abs(Y - .Pos.Y)
     End With
     

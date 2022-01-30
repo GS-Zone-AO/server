@@ -527,9 +527,10 @@ End Enum 'By TwIsT
 
 ''
 'The last existing client packet id.
-Private Const LAST_CLIENT_PACKET_ID As Byte = 129
+Private Const LAST_CLIENT_PACKET_ID As Byte = 130
 
 Private Enum ServerPacketID
+    LoggedToken             ' Token
     Logged                  ' LOGGED
     InfoTorneo
     ClientConfig            ' CLIENTCFG - GSZAO especial para opciones en el cliente
@@ -656,6 +657,7 @@ Private Enum ServerPacketID
 End Enum
 
 Private Enum ClientPacketID
+    EmptyPacket
     LoginToken              'GSZ Token Login
     LoginExistingChar       'OLOGIN
     ThrowDices              'TIRDAD
@@ -1108,6 +1110,9 @@ On Error Resume Next
     Debug.Print time & " - PacketID: " & packetID ' GSZ Debug
     
     Select Case packetID
+        
+        Case ClientPacketID.EmptyPacket
+            Call UserList(UserIndex).incomingData.ReadByte ' Ignore packet
     
         Case ClientPacketID.LoginToken
             Call HandleLoginToken(UserIndex)
@@ -2152,9 +2157,30 @@ With UserList(UserIndex)
 End With
 End Sub
 
+Public Sub WriteLoggedTokenMessage(ByVal UserIndex As Integer)
+'***************************************************
+'Author: ^[GS]^
+'Last Modification: 29/01/2022 - ^[GS]^
+'***************************************************
+On Error GoTo ErrHandler
+
+    With UserList(UserIndex)
+        Call .outgoingData.WriteByte(ServerPacketID.LoggedToken)
+        Call .outgoingData.WriteASCIIString(.AccountName)
+    End With
+    
+Exit Sub
+
+ErrHandler:
+    If Err.Number = UserList(UserIndex).outgoingData.NotEnoughSpaceErrCode Then
+        Call FlushBuffer(UserIndex)
+        Resume
+    End If
+End Sub
+
 Private Sub HandleLoginToken(ByVal UserIndex As Integer)
 '***************************************************
-'Author: Juan Martín Sotuyo Dodero (Maraxus)
+'Author: ^[GS]^
 'Last Modification: 29/01/2022 - ^[GS]^
 '***************************************************
     If UserList(UserIndex).incomingData.length < 6 Then
@@ -2182,7 +2208,6 @@ On Error GoTo ErrHandler
         Call WriteErrorMsg(UserIndex, "Token invalido. Vuelve a acceder para obtener un nuevo token.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
-        
         Exit Sub
     End If
     
@@ -2192,17 +2217,21 @@ On Error GoTo ErrHandler
     ' Serial del HD
     SerialHD = val(SDesencriptar(buffer.ReadASCIIString())) ' GSZAO
     
+    Dim bConSuccess As Boolean
     If BanHD_find(SerialHD) > 0 Then ' GSZAO
         Call WriteErrorMsg(UserIndex, "Se te ha prohibido la entrada a Argentum Online debido a tu mal comportamiento. Puedes consultar el reglamento y el sistema de soporte desde " & iniWWW)
     ElseIf Not VersionOK(Version) Then
         Call WriteErrorMsg(UserIndex, "Esta versión del juego es obsoleta, la versión correcta es la " & iniVersion & ". La misma se encuentra disponible en " & iniWWW)
     Else
-        Call WriteErrorMsg(UserIndex, "El token parece válido, pero aun no respuesta para él.")
-        'bConFailed = Not ConnectUser(UserIndex, UserName, Password, SerialHD) ' 0.13.5
+        bConSuccess = ConnectAccount(UserIndex, Token)
+        If bConSuccess Then
+            Call WriteLoggedTokenMessage(UserIndex)
+        End If
     End If
     
-    Call FlushBuffer(UserIndex)
-    Call CloseSocket(UserIndex)
+    'If we got here then packet is complete, copy data back to original queue
+    If bConSuccess Then _
+        Call UserList(UserIndex).incomingData.CopyBuffer(buffer)
     
     Exit Sub
     

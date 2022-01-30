@@ -1,7 +1,7 @@
 modAcciones = 0, 0, 0, 0, C
 modAdmin = 52, 52, 1477, 478, C
 modNPCsAI = 0, 0, 1425, 425, C
-modUsuariosComercio = 0, 0, 0, 0, C
+modUsuariosComercio = 104, 104, 1529, 529, C
 modDeclaraciones = 26, 26, 1451, 452, C
 modFileIO = 208, 208, 1633, 634, C
 modExtra = 0, 0, 1492, 451, C

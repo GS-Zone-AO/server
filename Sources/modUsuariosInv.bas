@@ -2048,3 +2048,96 @@ With UserList(UserIndex)
     Call UpdateUserInv(False, UserIndex, newSlot)
 End With
 End Sub
+
+
+Public Sub DropToUser(ByVal UserIndex As Integer, ByVal tIndex As Integer, ByVal userSlot As Byte, ByVal Amount As Integer)
+'***************************************************
+'Autor: maTih.-
+'Last Modification: -
+'
+'***************************************************
+
+Dim targetObj   As Obj
+Dim targetUser  As Integer
+Dim targetMSG   As String
+
+       With UserList(UserIndex)
+            'Save the userIndex.
+            targetUser = tIndex
+       
+            'It is a valid user?.
+                If UserList(targetUser).ConnID <> -1 Then
+                    targetObj.Amount = Amount
+                    targetObj.ObjIndex = .Invent.Object(userSlot).ObjIndex
+           
+                    'I give the object to another user.
+                    MeterItemEnInventario targetUser, targetObj
+          
+                    'Remove the object to my userIndex.
+                    QuitarUserInvItem UserIndex, userSlot, Amount
+                    
+                    'Update my inventory.
+                    UpdateUserInv False, UserIndex, userSlot
+                    
+                    'Avistage a users.
+                    If Amount <> 1 Then
+                       targetMSG = "Le has arrojado " & Amount & " - " & ObjData(targetObj.ObjIndex).Name
+                    Else
+                       targetMSG = "Le has arrojado tu " & ObjData(targetObj.ObjIndex).Name
+                    End If
+                    
+                    WriteConsoleMsg UserIndex, targetMSG & " ah " & UserList(targetUser).Name & "!", FontTypeNames.FONTTYPE_CITIZEN
+                    
+                    targetMSG = UserList(tIndex).Name
+                    
+                    'Prepare message to other user.
+                    If Amount <> 1 Then
+                       targetMSG = targetMSG & " Te ha arrojado " & Amount & " - " & ObjData(targetObj.ObjIndex).Name
+                    Else
+                       targetMSG = targetMSG & " Te ha arrojado su " & ObjData(targetObj.ObjIndex).Name
+                    End If
+                    
+                    WriteConsoleMsg tIndex, targetMSG, FontTypeNames.FONTTYPE_CITIZEN
+                    
+                    Exit Sub
+                End If
+        End With
+End Sub
+
+Sub DropToNPC(ByVal UserIndex As Integer, ByVal tNPC As Integer, ByVal userSlot As Byte, ByVal Amount As Integer)
+'***************************************************
+'Autor: maTih.-
+'Last Modification: 16/01/2022 - ^[GS]^
+'
+'***************************************************
+
+On Error GoTo error
+
+With UserList(UserIndex)
+
+Dim sellOk     As Boolean
+
+     'ITs banquero?
+     If Npclist(tNPC).NPCtype = eNPCType.Banquero Then
+        'Deposit the obj.
+        UserDejaObj UserIndex, userSlot, Amount
+        'Avistage user.
+        WriteConsoleMsg UserIndex, "Has depositado " & Amount & " - " & ObjData(.Invent.Object(userSlot).ObjIndex).Name, FontTypeNames.FONTTYPE_CITIZEN
+        'Update the inventory
+        UpdateUserInv False, UserIndex, userSlot
+        Exit Sub
+     End If
+
+     'NPC is a merchant?
+     If Npclist(tNPC).Comercia <> 0 Then
+        Comercio eModoComercio.Venta, UserIndex, tNPC, userSlot, Amount
+     End If
+        
+End With
+Exit Sub
+
+error:
+    Call LogError("DropToNPC: " & Err.Number & " - " & Err.description & " - Userindex: " & UserIndex)
+
+End Sub
+
