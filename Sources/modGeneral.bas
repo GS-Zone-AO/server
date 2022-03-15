@@ -250,7 +250,6 @@ On Error GoTo error
     
     Call LoadMotd
     Call LoadBanIP
-    Call LoadBanHD ' GSZ-AO
     
     frmMain.Caption = frmMain.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
     
@@ -377,6 +376,7 @@ On Error GoTo error
     pathServer = ValidDirectory(App.Path & "\")
     pathLogs = ValidDirectory(pathServer & "Logs\")
     pathChars = ValidDirectory(pathServer & "Charfiles\")
+    pathAccounts = ValidDirectory(pathServer & "Accounts\")
     pathDats = ValidDirectory(pathServer & "Dats\")
     pathGuilds = ValidDirectory(pathServer & "Guilds\")
     pathMaps = ValidDirectory(pathServer & "Maps\")
@@ -1099,7 +1099,6 @@ On Error Resume Next
     Next LoopC
     
     LastUser = 0
-    NumUsers = 0
     
     Call FreeNPCs
     Call FreeCharIndexes
@@ -1717,7 +1716,7 @@ End Sub
 Sub PasarSegundo()
 '***************************************************
 'Author: Unknownn
-'Last Modification: -
+'Last Modification: 01/03/2022 - ^[GS]^
 '
 '***************************************************
 
@@ -1734,7 +1733,9 @@ On Error GoTo ErrHandler
                     Call WriteDisconnect(i)
                     Call FlushBuffer(i)
                     
-                    Call CloseSocket(i)
+                    UserList(i).flags.UserLogged = False 'GSZAO
+                    Call CloseUser(i) 'GSZAO
+                    'Call CloseSocket(i)
                 End If
             End If
         End If

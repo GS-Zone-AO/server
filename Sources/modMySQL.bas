@@ -42,7 +42,7 @@ ErrHandler:
     End
 End Sub
 
-Public Function ChangeBan(ByVal Name As String, ByVal Baneado As Byte) As Boolean
+Public Function ChangeBan(ByVal name As String, ByVal Baneado As Byte) As Boolean
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -50,12 +50,12 @@ Public Function ChangeBan(ByVal Name As String, ByVal Baneado As Byte) As Boolea
     Dim Orden As String
     Dim RS As New ADODB.Recordset
     
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(Name) & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(name) & "'")
         If RS.BOF Or RS.EOF Then Exit Function
         
         Orden = "UPDATE `charflags` SET"
         Orden = Orden & " IndexPJ=" & RS!IndexPJ
-        Orden = Orden & ",Nombre='" & UCase$(Name) & "'"
+        Orden = Orden & ",Nombre='" & UCase$(name) & "'"
         Orden = Orden & ",Ban=" & Baneado
         Orden = Orden & " WHERE IndexPJ=" & RS!IndexPJ
 
@@ -79,7 +79,7 @@ ErrHandle:
     End
     
 End Sub
-Public Sub SaveUserSQL(UserIndex As Integer, Optional insertPj As Boolean = False)
+Public Sub SaveUserSQL(userIndex As Integer, Optional insertPj As Boolean = False)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -88,27 +88,27 @@ Public Sub SaveUserSQL(UserIndex As Integer, Optional insertPj As Boolean = Fals
     Dim iPJ As Integer
        
     If insertPj Then
-        iPJ = Insert_New_Table(UserList(UserIndex).Name)
+        iPJ = Insert_New_Table(UserList(userIndex).name)
     Else
-        iPJ = GetIndexPJ(UserList(UserIndex).Name)
+        iPJ = GetIndexPJ(UserList(userIndex).name)
     End If
 
-    SaveUserFlags UserIndex, iPJ
-    SaveUserStats UserIndex, iPJ
-    SaveReputacion UserIndex, iPJ
-    SaveUserInit UserIndex, iPJ
-    SaveUserInv UserIndex, iPJ
-    SaveUserBank UserIndex, iPJ
-    SaveUserHechi UserIndex, iPJ
-    SaveUserAtrib UserIndex, iPJ
-    SaveUserSkill UserIndex, iPJ
-    SaveUserFaccion UserIndex, iPJ
+    SaveUserFlags userIndex, iPJ
+    SaveUserStats userIndex, iPJ
+    SaveReputacion userIndex, iPJ
+    SaveUserInit userIndex, iPJ
+    SaveUserInv userIndex, iPJ
+    SaveUserBank userIndex, iPJ
+    SaveUserHechi userIndex, iPJ
+    SaveUserAtrib userIndex, iPJ
+    SaveUserSkill userIndex, iPJ
+    SaveUserFaccion userIndex, iPJ
     
     Exit Sub
 
 End Sub
 
-Sub SaveUserHechi(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserHechi(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -119,9 +119,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     '************************************************************************
     Set RS = Con.Execute("SELECT * FROM `charhechizos` WHERE IndexPJ=" & iPJ)
@@ -145,7 +145,7 @@ End Sub
 
 
 
-Sub SaveReputacion(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveReputacion(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -156,9 +156,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
         '************************************************************************
     Set RS = New ADODB.Recordset
@@ -193,7 +193,7 @@ End Sub
 
 
 
-Sub SaveUserFlags(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserFlags(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 08/06/2012 - ^[GS]^
@@ -204,14 +204,14 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
         '************************************************************************
     Set RS = New ADODB.Recordset
     
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & mUser.Name & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & mUser.name & "'")
         If RS.BOF Or RS.EOF Then Exit Sub
     Set RS = Nothing
     
@@ -220,7 +220,7 @@ On Local Error GoTo ErrHandle
     Set RS = Con.Execute("SELECT * FROM `charflags` WHERE IndexPJ=" & iPJ)
     str = "UPDATE `charflags` SET"
     str = str & " IndexPJ=" & iPJ
-    str = str & ",Nombre='" & mUser.Name & "'"
+    str = str & ",Nombre='" & mUser.name & "'"
     str = str & ",Ban=" & mUser.flags.Ban
     str = str & ",Navegando=" & mUser.flags.Navegando
     str = str & ",Envenenado=" & mUser.flags.Envenenado
@@ -235,7 +235,6 @@ On Local Error GoTo ErrHandle
     str = str & ",SkillsAsignados=" & mUser.Counters.AsignedSkills
     str = str & ",NPCSMUERTES=" & mUser.Stats.NPCsMuertos
     str = str & ",USERMUERTES=" & mUser.Stats.UsuariosMatados
-    str = str & ",SerialHD=" & mUser.flags.SerialHD
     str = str & " WHERE IndexPJ=" & iPJ
     Call Con.Execute(str)
     'Grabamos Estados
@@ -245,7 +244,7 @@ ErrHandle:
     Resume Next
 End Sub
 
-Sub SaveUserFaccion(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserFaccion(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -256,9 +255,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     '************************************************************************
     Set RS = Con.Execute("SELECT * FROM `charfaccion` WHERE IndexPJ=" & iPJ)
@@ -269,21 +268,21 @@ On Local Error GoTo ErrHandle
     
     'Graba Faccion
     str = str & " IndexPJ=" & iPJ
-    str = str & ",EjercitoReal=" & mUser.Faccion.ArmadaReal
-    str = str & ",EjercitoCaos=" & mUser.Faccion.FuerzasCaos
-    str = str & ",CiudMatados=" & mUser.Faccion.CiudadanosMatados
-    str = str & ",CaosMatados=" & mUser.Faccion.CriminalesMatados
-    str = str & ",FechaIngreso='" & mUser.Faccion.FechaIngreso & "'"
-    str = str & ",MatadosIngreso=" & mUser.Faccion.MatadosIngreso
-    str = str & ",NextRecompenza=" & mUser.Faccion.NextRecompensa
-    str = str & ",NivelIngreso=" & mUser.Faccion.NivelIngreso
-    str = str & ",RecibioArmaduraCaos=" & mUser.Faccion.RecibioArmaduraCaos
-    str = str & ",RecibioArmaduraReal=" & mUser.Faccion.RecibioArmaduraReal
-    str = str & ",RecompensasCaos=" & mUser.Faccion.RecompensasCaos
-    str = str & ",RecompensasReal=" & mUser.Faccion.RecompensasReal
-    str = str & ",Reenlistadas=" & mUser.Faccion.Reenlistadas
-    str = str & ",RecibioExpInicialCaos=" & mUser.Faccion.RecibioExpInicialCaos
-    str = str & ",RecibioExpInicialReal=" & mUser.Faccion.RecibioExpInicialReal
+    str = str & ",EjercitoReal=" & mUser.fAccion.ArmadaReal
+    str = str & ",EjercitoCaos=" & mUser.fAccion.FuerzasCaos
+    str = str & ",CiudMatados=" & mUser.fAccion.CiudadanosMatados
+    str = str & ",CaosMatados=" & mUser.fAccion.CriminalesMatados
+    str = str & ",FechaIngreso='" & mUser.fAccion.FechaIngreso & "'"
+    str = str & ",MatadosIngreso=" & mUser.fAccion.MatadosIngreso
+    str = str & ",NextRecompenza=" & mUser.fAccion.NextRecompensa
+    str = str & ",NivelIngreso=" & mUser.fAccion.NivelIngreso
+    str = str & ",RecibioArmaduraCaos=" & mUser.fAccion.RecibioArmaduraCaos
+    str = str & ",RecibioArmaduraReal=" & mUser.fAccion.RecibioArmaduraReal
+    str = str & ",RecompensasCaos=" & mUser.fAccion.RecompensasCaos
+    str = str & ",RecompensasReal=" & mUser.fAccion.RecompensasReal
+    str = str & ",Reenlistadas=" & mUser.fAccion.Reenlistadas
+    str = str & ",RecibioExpInicialCaos=" & mUser.fAccion.RecibioExpInicialCaos
+    str = str & ",RecibioExpInicialReal=" & mUser.fAccion.RecibioExpInicialReal
 
     
     str = str & " WHERE IndexPJ=" & iPJ
@@ -293,7 +292,7 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Sub SaveUserInit(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserInit(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -304,9 +303,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     
     '************************************************************************
@@ -352,9 +351,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     If InMapBounds(Map, X, Y) = False Then Exit Sub
     
     '************************************************************************
@@ -373,7 +372,7 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Sub SaveUserInv(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserInv(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -384,9 +383,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     
     '************************************************************************
@@ -418,7 +417,7 @@ ErrHandle:
     Resume Next
     
 End Sub
-Sub SaveUserBank(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserBank(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -429,9 +428,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     
     '************************************************************************
@@ -452,7 +451,7 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Sub SaveUserStats(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserStats(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -463,9 +462,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     '************************************************************************
     Set RS = Con.Execute("SELECT * FROM `charstats` WHERE IndexPJ=" & iPJ)
@@ -501,7 +500,7 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Sub SaveUserAtrib(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserAtrib(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -512,9 +511,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     
     '************************************************************************
@@ -534,7 +533,7 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Sub SaveUserSkill(ByVal UserIndex As Integer, ByVal iPJ As Integer)
+Sub SaveUserSkill(ByVal userIndex As Integer, ByVal iPJ As Integer)
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -545,9 +544,9 @@ On Local Error GoTo ErrHandle
     Dim i As Byte
     Dim str As String
     
-    mUser = UserList(UserIndex)
+    mUser = UserList(userIndex)
     
-    If Len(mUser.Name) = 0 Then Exit Sub
+    If Len(mUser.name) = 0 Then Exit Sub
     
     '************************************************************************
     Set RS = Con.Execute("SELECT * FROM `charskills` WHERE IndexPJ=" & iPJ)
@@ -573,16 +572,16 @@ On Local Error GoTo ErrHandle
 ErrHandle:
     Resume Next
 End Sub
-Function LoadUserSQL(UserIndex As Integer, ByVal Name As String) As Boolean
+Function LoadUserSQL(userIndex As Integer, ByVal name As String) As Boolean
 On Error GoTo ErrHandler
 Dim i As Integer
 Dim RS As New ADODB.Recordset
 Dim iPJ  As Integer
 
-With UserList(UserIndex)
+With UserList(userIndex)
 
     '************************************************************************
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & Name & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & name & "'")
         If RS.BOF Or RS.EOF Then
             LoadUserSQL = False
             Exit Function
@@ -612,7 +611,6 @@ With UserList(UserIndex)
     .flags.Hambre = RS!Hambre
     .flags.Escondido = RS!Escondido
     .flags.Muerto = RS!Muerto
-    .flags.SerialHD = RS!SerialHD
 
     Set RS = Nothing
     '************************************************************************
@@ -626,9 +624,9 @@ With UserList(UserIndex)
     End If
     
     ' Carga Faccion
-    .Faccion.ArmadaReal = RS!EjercitoReal
-    .Faccion.FuerzasCaos = RS!EjercitoCaos
-    .Faccion.CiudadanosMatados = RS!CiudMatados
+    .fAccion.ArmadaReal = RS!EjercitoReal
+    .fAccion.FuerzasCaos = RS!EjercitoCaos
+    .fAccion.CiudadanosMatados = RS!CiudMatados
     ' Fin Carga Faccion
     
     Set RS = Nothing
@@ -657,7 +655,7 @@ With UserList(UserIndex)
             Exit Function
         End If
         
-        UserList(UserIndex).GuildIndex = RS!GuildIndex
+        UserList(userIndex).GuildIndex = RS!GuildIndex
     Set RS = Nothing
     '************************************************************************
     
@@ -773,14 +771,14 @@ With UserList(UserIndex)
     .Char.WeaponAnim = RS!Arma
     .Char.ShieldAnim = RS!Escudo
     .Char.CascoAnim = RS!casco
-    .ip = RS!LastIP
+    .ip = RS!lastip
     .Pos.Map = RS!mapa
     .Pos.X = RS!X
     .Pos.Y = RS!Y
     
     If .flags.Muerto = 0 Then
         .Char = .OrigChar
-        Call VerObjetosEquipados(UserIndex)
+        Call VerObjetosEquipados(userIndex)
     Else
         .Char.Body = iCuerpoMuerto
         .Char.Head = iCabezaMuerto
@@ -809,13 +807,13 @@ End With
 Exit Function
 
 ErrHandler:
-    Call LogError("Error en LoadUserSQL. N:" & Name & " - " & Err.Number & "-" & Err.description)
+    Call LogError("Error en LoadUserSQL. N:" & name & " - " & Err.Number & "-" & Err.description)
     Set RS = Nothing
     
 End Function
 
 
-Public Function BANCheckDB(ByVal Name As String) As Boolean
+Public Function BANCheckDB(ByVal name As String) As Boolean
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -823,7 +821,7 @@ Public Function BANCheckDB(ByVal Name As String) As Boolean
     Dim RS As New ADODB.Recordset
     Dim Baneado As Byte
     
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(Name) & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(name) & "'")
         If RS.BOF Or RS.EOF Then Exit Function
     
         Baneado = RS!Ban
@@ -832,21 +830,21 @@ Public Function BANCheckDB(ByVal Name As String) As Boolean
 
 End Function
 
-Function ExistePersonaje(Name As String) As Boolean
+Function ExistePersonaje(name As String) As Boolean
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
 '************************************************************************
     Dim RS As New ADODB.Recordset
     
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(Name) & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(name) & "'")
         If RS.BOF Or RS.EOF Then Exit Function
     Set RS = Nothing
     
     ExistePersonaje = True
 End Function
 
-Public Function GetIndexPJ(ByVal Name As String) As Integer
+Public Function GetIndexPJ(ByVal name As String) As Integer
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -855,7 +853,7 @@ On Error GoTo Err
     Dim RS As New ADODB.Recordset
     Dim IndexPJ As Long
 
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(Name) & "'")
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & UCase$(name) & "'")
         If RS.BOF Or RS.EOF Then
             GoTo Err
         Else
@@ -870,20 +868,20 @@ Err:
     Exit Function
 End Function
 
-Public Sub VerObjetosEquipados(UserIndex As Integer)
+Public Sub VerObjetosEquipados(userIndex As Integer)
 
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
 '************************************************************************
 
-With UserList(UserIndex).Invent
+With UserList(userIndex).Invent
     If .CascoEqpSlot Then
         .Object(.CascoEqpSlot).Equipped = 1
         .CascoEqpObjIndex = .Object(.CascoEqpSlot).ObjIndex
-        UserList(UserIndex).Char.CascoAnim = ObjData(.CascoEqpObjIndex).CascoAnim
+        UserList(userIndex).Char.CascoAnim = ObjData(.CascoEqpObjIndex).CascoAnim
     Else
-        UserList(UserIndex).Char.CascoAnim = NingunCasco
+        UserList(userIndex).Char.CascoAnim = NingunCasco
     End If
     
     If .BarcoSlot Then .BarcoObjIndex = .Object(.BarcoSlot).ObjIndex
@@ -891,25 +889,25 @@ With UserList(UserIndex).Invent
     If .ArmourEqpSlot Then
         .Object(.ArmourEqpSlot).Equipped = 1
         .ArmourEqpObjIndex = .Object(.ArmourEqpSlot).ObjIndex
-        UserList(UserIndex).Char.Body = ObjData(.ArmourEqpObjIndex).Ropaje
+        UserList(userIndex).Char.Body = ObjData(.ArmourEqpObjIndex).Ropaje
     Else
-        Call DarCuerpoDesnudo(UserIndex)
+        Call DarCuerpoDesnudo(userIndex)
     End If
     
     If .WeaponEqpSlot > 0 Then
         .Object(.WeaponEqpSlot).Equipped = 1
         .WeaponEqpObjIndex = .Object(.WeaponEqpSlot).ObjIndex
-        If .Object(.WeaponEqpSlot).ObjIndex > 0 Then UserList(UserIndex).Char.WeaponAnim = ObjData(.WeaponEqpObjIndex).WeaponAnim
+        If .Object(.WeaponEqpSlot).ObjIndex > 0 Then UserList(userIndex).Char.WeaponAnim = ObjData(.WeaponEqpObjIndex).WeaponAnim
     Else
-        UserList(UserIndex).Char.WeaponAnim = NingunArma
+        UserList(userIndex).Char.WeaponAnim = NingunArma
     End If
     
     If .EscudoEqpSlot > 0 Then
         .Object(.EscudoEqpSlot).Equipped = 1
         .EscudoEqpObjIndex = .Object(.EscudoEqpSlot).ObjIndex
-        UserList(UserIndex).Char.ShieldAnim = ObjData(.EscudoEqpObjIndex).ShieldAnim
+        UserList(userIndex).Char.ShieldAnim = ObjData(.EscudoEqpObjIndex).ShieldAnim
     Else
-        UserList(UserIndex).Char.ShieldAnim = NingunEscudo
+        UserList(userIndex).Char.ShieldAnim = NingunEscudo
     End If
 
     If .MunicionEqpSlot Then
@@ -922,7 +920,7 @@ With UserList(UserIndex).Invent
 End With
 
 End Sub
-Public Function Insert_New_Table(ByRef Name As String) As Integer
+Public Function Insert_New_Table(ByRef name As String) As Integer
 '************************************************************************
 'Autor: Jose Ignacio Castelli ( Fedudok )
 'Fecha: 21/7/2011
@@ -933,8 +931,8 @@ On Error GoTo Erro
     Dim RS As ADODB.Recordset
     Set RS = New ADODB.Recordset
     
-    Con.Execute "INSERT INTO `charflags` (NOMBRE) VALUES ('" & Name & "')"
-    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & Name & "'")
+    Con.Execute "INSERT INTO `charflags` (NOMBRE) VALUES ('" & name & "')"
+    Set RS = Con.Execute("SELECT * FROM `charflags` WHERE Nombre='" & name & "'")
         iPJ = RS!IndexPJ
     Set RS = Nothing
 
@@ -953,7 +951,7 @@ On Error GoTo Erro
     Insert_New_Table = iPJ
     Exit Function
 Erro:
-    LogError "Insert_New_Table " & Name & " " & Err.Number & " " & Err.description
+    LogError "Insert_New_Table " & name & " " & Err.Number & " " & Err.description
 End Function
 
 #End If

@@ -483,8 +483,6 @@ Public Sub EventoSockAccept(ByVal SockID As Long)
          
         If NewIndex > LastUser Then LastUser = NewIndex
         
-        UserList(NewIndex).flags.CaptchaKey = 0
-        UserList(NewIndex).flags.CaptchaCode(0) = 0
         UserList(NewIndex).ConnID = NuevoSock
         UserList(NewIndex).ConnIDValida = True
         
@@ -575,7 +573,6 @@ Dim i As Long
     Next i
     
     LastUser = 1
-    NumUsers = 0
     
     Call LimpiaWsApi
     Call Sleep(100)

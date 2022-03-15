@@ -530,8 +530,10 @@ End Enum 'By TwIsT
 Private Const LAST_CLIENT_PACKET_ID As Byte = 130
 
 Private Enum ServerPacketID
-    LoggedToken             ' Token
+    ' Accounts
+    LoggedToken             ' Account logged
     Logged                  ' LOGGED
+
     InfoTorneo
     ClientConfig            ' CLIENTCFG - GSZAO especial para opciones en el cliente
     CreateParticleInChar    ' CPCHAR - GSZAO crea particulas en chars
@@ -657,11 +659,15 @@ Private Enum ServerPacketID
 End Enum
 
 Private Enum ClientPacketID
-    EmptyPacket
+    ' Accounts
     LoginToken              'GSZ Token Login
-    LoginExistingChar       'OLOGIN
-    ThrowDices              'TIRDAD
-    LoginNewChar            'NLOGIN
+    AccountChars            'Traer los personajes de la cuenta
+    ' Characters
+    ThrowDices              'Tirar datos
+    NewChar                 'Nuevo personaje
+    ExistingChar            'Ingresar personaje
+    DeleteChar              'Borrar personaje
+    ' Gameplay
     Talk                    ';
     Yell                    '-
     Whisper                 '\
@@ -917,7 +923,7 @@ Public Enum eGMCommands
     TileBlockedToggle       '/BLOQ
     KillNPCNoRespawn        '/MATA
     KillAllNearbyNPCs       '/MASSKILL
-    LastIP                  '/LASTIP
+    lastip                  '/LASTIP
     ChangeMOTD              '/MOTDCAMBIA
     SetMOTD                 'ZMOTD
     SystemMessage           '/SMSG
@@ -970,9 +976,6 @@ Public Enum eGMCommands
     
     ' GSZ-AO
     AdminCargos             '/ADMIN <tipo> <accion> <nick> --  Tipos: D S C R   Accion: + - =
-    VerHD                   '/VERHD USUARIO
-    BanHD                   '/BANHD USUARIO
-    UnBanHD                 '/UNBANHD NROHD
     SearchObj               '/BUSCAROBJ NOMBRE
     SearchNpc               '/BUSCARNPC NOMBRE
     LluviaDeORO             '/LLUVIADEORO
@@ -1107,24 +1110,29 @@ On Error Resume Next
     ' Ante cualquier paquete, pierde la proteccion de ser atacado.
     UserList(UserIndex).flags.NoPuedeSerAtacado = False
     
-    Debug.Print time & " - PacketID: " & packetID ' GSZ Debug
+    #If Testeo Then
+        Debug.Print "SOCKET <- [" & UserIndex & "] " & time & " - PacketID: " & packetID ' GSZ Debug
+    #End If
     
     Select Case packetID
         
-        Case ClientPacketID.EmptyPacket
-            Call UserList(UserIndex).incomingData.ReadByte ' Ignore packet
-    
         Case ClientPacketID.LoginToken
             Call HandleLoginToken(UserIndex)
-
-        Case ClientPacketID.LoginExistingChar       'OLOGIN
-            Call HandleLoginExistingChar(UserIndex)
+            
+        Case ClientPacketID.AccountChars
+            Call HandleAccountChars(UserIndex)
         
         Case ClientPacketID.ThrowDices              'TIRDAD
             Call HandleThrowDices(UserIndex)
-        
-        Case ClientPacketID.LoginNewChar            'NLOGIN
-            Call HandleLoginNewChar(UserIndex)
+            
+        Case ClientPacketID.NewChar                 'NLOGIN
+            Call HandleNewChar(UserIndex)
+            
+        Case ClientPacketID.ExistingChar            'OLOGIN
+            Call HandleExistingChar(UserIndex)
+            
+        Case ClientPacketID.DeleteChar
+            Call HandleDeleteChar(UserIndex)
         
         Case ClientPacketID.Talk                    ';
             Call HandleTalk(UserIndex)
@@ -1838,7 +1846,7 @@ With UserList(UserIndex)
         Case eGMCommands.KillAllNearbyNPCs       '/MASSKILL
             Call HandleKillAllNearbyNPCs(UserIndex)
         
-        Case eGMCommands.LastIP                  '/LASTIP
+        Case eGMCommands.lastip                  '/LASTIP
             Call HandleLastIP(UserIndex)
         
         Case eGMCommands.ChangeMOTD              '/MOTDCAMBIA
@@ -2024,15 +2032,6 @@ With UserList(UserIndex)
         Case eGMCommands.AdminCargos             '/ADMIN ' GSZAO
             Call HandleAdminCargos(UserIndex)
             
-        Case eGMCommands.VerHD                   '/VERHD NICKUSUARIO
-            Call HandleVerHD(UserIndex)
-               
-        Case eGMCommands.BanHD                   '/BANHD NICKUSUARIO
-            Call HandleBanHD(UserIndex)
-       
-        Case eGMCommands.UnBanHD                 '/UNBANHD NICKUSUARIO
-            Call HandleUnbanHD(UserIndex)
-            
         Case eGMCommands.SearchObj               '/BUSCAROBJ NOMBRE
             Call HandleSearchObj(UserIndex)
             
@@ -2157,16 +2156,41 @@ With UserList(UserIndex)
 End With
 End Sub
 
-Public Sub WriteLoggedTokenMessage(ByVal UserIndex As Integer)
+Public Sub WriteAccountChars(ByVal UserIndex As Integer, ByVal NumberOfCharacters As Byte, _
+                                  ByRef Characters() As AccountUser)
 '***************************************************
 'Author: ^[GS]^
-'Last Modification: 29/01/2022 - ^[GS]^
+'Last Modification: 14/03/2022 - ^[GS]^
 '***************************************************
 On Error GoTo ErrHandler
 
     With UserList(UserIndex)
         Call .outgoingData.WriteByte(ServerPacketID.LoggedToken)
         Call .outgoingData.WriteASCIIString(.AccountName)
+        Call .outgoingData.WriteByte(NumberOfCharacters)
+
+        If NumberOfCharacters > 0 Then
+            Dim i As Byte
+            For i = 1 To NumberOfCharacters
+                Call .outgoingData.WriteASCIIString(Characters(i).Name)
+                Call .outgoingData.WriteInteger(Characters(i).Body)
+                Call .outgoingData.WriteInteger(Characters(i).Head)
+                Call .outgoingData.WriteInteger(Characters(i).Weapon)
+                Call .outgoingData.WriteInteger(Characters(i).Shield)
+                Call .outgoingData.WriteInteger(Characters(i).Helmet)
+                Call .outgoingData.WriteByte(Characters(i).Class)
+                Call .outgoingData.WriteByte(Characters(i).Race)
+                Call .outgoingData.WriteASCIIString(Characters(i).Map)
+                Call .outgoingData.WriteByte(Characters(i).Level)
+                Call .outgoingData.WriteLong(Characters(i).Gold)
+                Call .outgoingData.WriteASCIIString(Characters(i).LastConnect)
+                Call .outgoingData.WriteBoolean(Characters(i).Criminal)
+                Call .outgoingData.WriteBoolean(Characters(i).Dead)
+                Call .outgoingData.WriteBoolean(Characters(i).GameMaster)
+            Next i
+
+        End If
+
     End With
     
 Exit Sub
@@ -2181,7 +2205,7 @@ End Sub
 Private Sub HandleLoginToken(ByVal UserIndex As Integer)
 '***************************************************
 'Author: ^[GS]^
-'Last Modification: 29/01/2022 - ^[GS]^
+'Last Modification: 27/02/2022 - ^[GS]^
 '***************************************************
     If UserList(UserIndex).incomingData.length < 6 Then
         Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
@@ -2199,33 +2223,28 @@ On Error GoTo ErrHandler
     
     Dim Token As String
     Dim Version As String
-    Dim SerialHD As Long ' GSZAO
     Dim i As Byte
     
     Token = buffer.ReadASCIIString()
     
-    If Not ValidJWT(Token) Then
+    If Not modAccounts.ValidJWT(Token) Then
         Call WriteErrorMsg(UserIndex, "Token invalido. Vuelve a acceder para obtener un nuevo token.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
+        
         Exit Sub
     End If
     
     'Convert version number to string
     Version = CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte())
     
-    ' Serial del HD
-    SerialHD = val(SDesencriptar(buffer.ReadASCIIString())) ' GSZAO
-    
     Dim bConSuccess As Boolean
-    If BanHD_find(SerialHD) > 0 Then ' GSZAO
-        Call WriteErrorMsg(UserIndex, "Se te ha prohibido la entrada a Argentum Online debido a tu mal comportamiento. Puedes consultar el reglamento y el sistema de soporte desde " & iniWWW)
-    ElseIf Not VersionOK(Version) Then
+    If Not VersionOK(Version) Then
         Call WriteErrorMsg(UserIndex, "Esta versión del juego es obsoleta, la versión correcta es la " & iniVersion & ". La misma se encuentra disponible en " & iniWWW)
     Else
-        bConSuccess = ConnectAccount(UserIndex, Token)
+        bConSuccess = modAccounts.ConnectAccount(UserIndex, Token)
         If bConSuccess Then
-            Call WriteLoggedTokenMessage(UserIndex)
+            Call modAccounts.LoadAccount(UserIndex)
         End If
     End If
     
@@ -2252,14 +2271,14 @@ End Sub
 
 
 ''
-' Handles the "LoginExistingChar" message.
+' Handles the "ExistingChar" message.
 '
 ' @param    userIndex The index of the user sending the message.
 
-Private Sub HandleLoginExistingChar(ByVal UserIndex As Integer)
+Private Sub HandleExistingChar(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 30/10/2012 - ^[GS]^
+'Last Modification: 26/02/2022 - ^[GS]^
 '***************************************************
     If UserList(UserIndex).incomingData.length < 6 Then
         Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
@@ -2275,46 +2294,43 @@ On Error GoTo ErrHandler
     'Remove packet ID
     Call buffer.ReadByte
 
-    Dim UserName As String
-    Dim Password As String
-    Dim Version As String
-    Dim SerialHD As Long ' GSZAO
+    Dim charName As String
     Dim i As Byte
     
-    UserName = buffer.ReadASCIIString()
-    Password = buffer.ReadASCIIString()
+    charName = buffer.ReadASCIIString()
     
-    'Convert version number to string
-    Version = CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte())
-    
-    ' Serial del HD
-    SerialHD = val(SDesencriptar(buffer.ReadASCIIString())) ' GSZAO
-    
-    If Not AsciiValidos(UserName) Then
+    If Not AsciiValidos(charName) Or LenB(charName) = 0 Then
         Call WriteErrorMsg(UserIndex, "Nombre inválido.")
+        Call FlushBuffer(UserIndex)
+        
+        Exit Sub
+    End If
+
+    If Not PersonajeExiste(charName) Then
+        Call WriteErrorMsg(UserIndex, "El personaje no existe.")
+        Call FlushBuffer(UserIndex)
+        
+        Exit Sub
+    End If
+    
+    If Not UserList(UserIndex).flags.AccountLogged Then
+        Call WriteErrorMsg(UserIndex, "Debes iniciar sesión para ingresar con este personaje.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
         
         Exit Sub
     End If
-
-    If Not PersonajeExiste(UserName) Then
-        Call WriteErrorMsg(UserIndex, "El personaje no existe.")
+    
+    If UserList(UserIndex).flags.UserLogged Then
+        Call WriteErrorMsg(UserIndex, "Debes cerrar el personaje anterior para ingresar en este.")
         Call FlushBuffer(UserIndex)
-        Call CloseSocket(UserIndex)
         
         Exit Sub
     End If
        
     Dim bConFailed As Boolean
        
-    If BANCheck(UserName) Or BanHD_find(SerialHD) > 0 Then ' GSZAO
-        Call WriteErrorMsg(UserIndex, "Se te ha prohibido la entrada a Argentum Online debido a tu mal comportamiento. Puedes consultar el reglamento y el sistema de soporte desde " & iniWWW)
-    ElseIf Not VersionOK(Version) Then
-        Call WriteErrorMsg(UserIndex, "Esta versión del juego es obsoleta, la versión correcta es la " & iniVersion & ". La misma se encuentra disponible en " & iniWWW)
-    Else
-        bConFailed = Not ConnectUser(UserIndex, UserName, Password, SerialHD) ' 0.13.5
-    End If
+    bConFailed = Not ConnectUser(UserIndex, charName)
     
     'If we got here then packet is complete, copy data back to original queue
     If Not bConFailed Then _
@@ -2325,6 +2341,8 @@ On Error GoTo ErrHandler
         UserList(UserIndex).flags.UltimoMensaje = 7
         Exit Sub
     End If
+    
+    Exit Sub
      
 ErrHandler:
     Dim error As Long
@@ -2335,10 +2353,105 @@ On Error GoTo 0
     Set buffer = Nothing
     
     If error <> 0 Then
-        LogError "Error en HandleLoginExistingChar: " & Err.description & "(" & error & "). UserName:" & UserName & _
+        LogError "Error en HandleExistingChar: " & Err.description & "(" & error & "). charName:" & charName & _
             ". UserIndex: " & UserIndex ' 0.13.5
         Err.Raise error
     End If
+End Sub
+
+''
+' Handles the "DeleteChar" message.
+'
+' @param    userIndex The index of the user sending the message.
+
+Private Sub HandleDeleteChar(ByVal UserIndex As Integer)
+'***************************************************
+'Author: ^[GS]^
+'Last Modification: 01/03/2022 - ^[GS]^
+'***************************************************
+    If UserList(UserIndex).incomingData.length < 6 Then
+        Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
+        Exit Sub
+    End If
+    
+On Error GoTo ErrHandler
+
+    'This packet contains strings, make a copy of the data to prevent losses if it's not complete yet...
+    Dim buffer As clsByteQueue: Set buffer = New clsByteQueue
+    Call buffer.CopyBuffer(UserList(UserIndex).incomingData)
+    
+    'Remove packet ID
+    Call buffer.ReadByte
+
+    Dim charName As String
+
+    charName = buffer.ReadASCIIString()
+    
+    If Not AsciiValidos(charName) Or LenB(charName) = 0 Then
+        Call WriteErrorMsg(UserIndex, "Nombre inválido.")
+        Call FlushBuffer(UserIndex)
+        
+        Exit Sub
+    End If
+
+    If Not PersonajeExiste(charName) Then
+        Call WriteErrorMsg(UserIndex, "El personaje no existe.")
+        Call FlushBuffer(UserIndex)
+        
+        Exit Sub
+    End If
+    
+    If Not UserList(UserIndex).flags.AccountLogged Then
+        Call WriteErrorMsg(UserIndex, "Debes iniciar sesión para ingresar con este personaje.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        
+        Exit Sub
+    End If
+    
+    If Not modAccounts.IsCharInAccount(UserIndex, charName) Then
+        Call WriteErrorMsg(UserIndex, "El personaje ya no existe.")
+        Call FlushBuffer(UserIndex)
+        
+        Exit Sub
+    End If
+    
+    Call modAccounts.DeleteCharacterFromAccount(UserIndex, charName)
+    Call modAccounts.LoadAccount(UserIndex)
+    
+    Call UserList(UserIndex).incomingData.CopyBuffer(buffer)
+    
+    Exit Sub
+
+ErrHandler:
+    Dim error As Long
+    error = Err.Number
+On Error GoTo 0
+    
+    'Destroy auxiliar buffer
+    Set buffer = Nothing
+    
+    If error <> 0 Then
+        LogError "Error en HandleExistingChar: " & Err.description & "(" & error & "). charName:" & charName & _
+            ". UserIndex: " & UserIndex ' 0.13.5
+        Err.Raise error
+    End If
+End Sub
+
+''
+' Handles the "AccountChars" message.
+'
+' @param    userIndex The index of the user sending the message.
+
+Private Sub HandleAccountChars(ByVal UserIndex As Integer)
+'***************************************************
+'Author: ^[GS]^
+'Last Modification: 28/02/2022 - ^[GS]^
+'***************************************************
+    'Remove packet ID
+    Call UserList(UserIndex).incomingData.ReadByte
+    
+    Call LoadAccount(UserIndex)
 End Sub
 
 ''
@@ -2349,41 +2462,31 @@ End Sub
 Private Sub HandleThrowDices(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 02/08/2012 - ^[GS]^
+'Last Modification: 26/02/2022 - ^[GS]^
 '***************************************************
     'Remove packet ID
     Call UserList(UserIndex).incomingData.ReadByte
     
-    With UserList(UserIndex).Stats
-        .UserAtributos(eAtributos.Fuerza) = MaximoInt(Dados(0).Minimo, Dados(0).Base + RandomNumber(0, Dados(0).Random))
-        .UserAtributos(eAtributos.Agilidad) = MaximoInt(Dados(1).Minimo, Dados(1).Base + RandomNumber(0, Dados(0).Random))
-        .UserAtributos(eAtributos.Inteligencia) = MaximoInt(Dados(2).Minimo, Dados(2).Base + RandomNumber(0, Dados(0).Random))
-        .UserAtributos(eAtributos.Carisma) = MaximoInt(Dados(3).Minimo, Dados(3).Base + RandomNumber(0, Dados(0).Random))
-        .UserAtributos(eAtributos.Constitucion) = MaximoInt(Dados(4).Minimo, Dados(4).Base + RandomNumber(0, Dados(0).Random))
+    With UserList(UserIndex).flags
+        .AccountDices(eAtributos.Fuerza) = MaximoInt(Dados(0).Minimo, Dados(0).Base + RandomNumber(0, Dados(0).Random))
+        .AccountDices(eAtributos.Agilidad) = MaximoInt(Dados(1).Minimo, Dados(1).Base + RandomNumber(0, Dados(0).Random))
+        .AccountDices(eAtributos.Inteligencia) = MaximoInt(Dados(2).Minimo, Dados(2).Base + RandomNumber(0, Dados(0).Random))
+        .AccountDices(eAtributos.Carisma) = MaximoInt(Dados(3).Minimo, Dados(3).Base + RandomNumber(0, Dados(0).Random))
+        .AccountDices(eAtributos.Constitucion) = MaximoInt(Dados(4).Minimo, Dados(4).Base + RandomNumber(0, Dados(0).Random))
     End With
-    
-    ' GSZAO - Captcha en la creación del personaje ¿Porqué? Para evitar el registro de bots!
-    UserList(UserIndex).flags.CaptchaKey = val(UserList(UserIndex).incomingData.ReadByte)
-    If UserList(UserIndex).flags.CaptchaCode(0) = 0 And UserList(UserIndex).flags.CaptchaKey <> 0 Then
-        ' 4 digitos.... letra-numero-letra-numero
-        UserList(UserIndex).flags.CaptchaCode(0) = RandomNumber(97, 122)
-        UserList(UserIndex).flags.CaptchaCode(1) = RandomNumber(48, 57)
-        UserList(UserIndex).flags.CaptchaCode(2) = RandomNumber(97, 122)
-        UserList(UserIndex).flags.CaptchaCode(3) = RandomNumber(48, 57)
-    End If
     
     Call WriteDiceRoll(UserIndex)
 End Sub
 
 ''
-' Handles the "LoginNewChar" message.
+' Handles the "NewChar" message.
 '
 ' @param    userIndex The index of the user sending the message.
 
-Private Sub HandleLoginNewChar(ByVal UserIndex As Integer)
+Private Sub HandleNewChar(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 08/06/2012 - ^[GS]^
+'Last Modification: 26/02/2022 - ^[GS]^
 '
 '***************************************************
     If UserList(UserIndex).incomingData.length < 15 Then
@@ -2399,16 +2502,11 @@ On Error GoTo ErrHandler
     'Remove packet ID
     Call buffer.ReadByte
 
-    Dim UserName As String
-    Dim Password As String
-    Dim Version As String
-    Dim SerialHD As Long ' GSZAO
+    Dim charName As String
     Dim Race As eRaza
     Dim Gender As eGenero
-    Dim Homeland As Byte ' GSZAO
     Dim Class As eClass
     Dim Head As Integer
-    Dim Mail As String
     
     If iniPuedeCrearPersonajes = 0 Then
         Call WriteErrorMsg(UserIndex, "La creación de personajes en este servidor se ha deshabilitado.")
@@ -2426,6 +2524,14 @@ On Error GoTo ErrHandler
         Exit Sub
     End If
     
+    If Not UserList(UserIndex).flags.AccountLogged Then
+        Call WriteErrorMsg(UserIndex, "Debes iniciar sesión para crear personajes.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        
+        Exit Sub
+    End If
+    
     If aClon.MaxPersonajes(UserList(UserIndex).ip) Then
         Call WriteErrorMsg(UserIndex, "Has creado demasiados personajes.")
         Call FlushBuffer(UserIndex)
@@ -2434,29 +2540,13 @@ On Error GoTo ErrHandler
         Exit Sub
     End If
     
-    UserName = buffer.ReadASCIIString()
-    Password = buffer.ReadASCIIString()
-    
-    'Convert version number to string
-    Version = CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte()) & "." & CStr(buffer.ReadByte())
-        
-    ' Serial del HD
-    SerialHD = val(SDesencriptar(buffer.ReadASCIIString())) ' GSZAO
-        
+    charName = buffer.ReadASCIIString()
     Race = buffer.ReadByte()
     Gender = buffer.ReadByte()
     Class = buffer.ReadByte()
     Head = buffer.ReadInteger
-    Mail = buffer.ReadASCIIString()
-    Homeland = buffer.ReadByte()
         
-    If BanHD_find(SerialHD) > 0 Then ' GSZAO
-        Call WriteErrorMsg(UserIndex, "Se te ha prohibido la entrada a Argentum Online debido a tu mal comportamiento. Puedes consultar el reglamento y el sistema de soporte desde " & iniWWW)
-    ElseIf Not VersionOK(Version) Then
-        Call WriteErrorMsg(UserIndex, "Esta versión del juego es obsoleta, la versión correcta es la " & iniVersion & ". La misma se encuentra disponible en " & iniWWW)
-    Else
-        Call ConnectNewUser(UserIndex, UserName, Password, Race, Gender, Class, Mail, Homeland, Head, SerialHD)
-    End If
+    Call ConnectNewUser(UserIndex, charName, Race, Gender, Class, Head)
 
     'If we got here then packet is complete, copy data back to original queue
     Call UserList(UserIndex).incomingData.CopyBuffer(buffer)
@@ -6060,10 +6150,9 @@ End Sub
 Private Sub HandleQuit(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 04/15/2008 (NicoNZ)
+'Last Modification: 01/03/2022 - ^[GS]^
 'If user is invisible, it automatically becomes
 'visible before doing the countdown to exit
-'04/15/2008 - No se reseteaban lso contadores de invi ni de ocultar. (NicoNZ)
 '***************************************************
     Dim tUser As Integer
     Dim isNotVisible As Boolean
@@ -11157,170 +11246,6 @@ On Error GoTo ErrHandler
         Call .incomingData.CopyBuffer(buffer)
     End With
 
-ErrHandler:
-    Dim error As Long
-    error = Err.Number
-On Error GoTo 0
-    
-    'Destroy auxiliar buffer
-    Set buffer = Nothing
-    
-    If error <> 0 Then Err.Raise error
-End Sub
-
-''
-' Handles the "VerHD" message.
-'
-' @param    userIndex The index of the user sending the message.
-Private Sub HandleVerHD(ByVal UserIndex As Integer)
-'***************************************************
-'Author: ArzenaTh
-'Last Modification:  08/06/2012 - ^[GS]^
-'Verifica el HD del usuario.
-'***************************************************
- 
-    If UserList(UserIndex).incomingData.length < 3 Then
-        Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
-        Exit Sub
-    End If
-   
-On Error GoTo ErrHandler
-    With UserList(UserIndex)
-        Dim buffer As clsByteQueue: Set buffer = New clsByteQueue
-        Call buffer.CopyBuffer(.incomingData)
-        
-        'Remove packet ID
-        Call buffer.ReadByte
-               
-        Dim iUsuario As Integer
-
-        iUsuario = NameIndex(buffer.ReadASCIIString())
-       
-        If iUsuario = 0 Then
-            Call WriteMensajes(UserIndex, eMensajes.Mensaje321) '"El personaje no está online."
-        Else
-            Call WriteConsoleMsg(UserIndex, "El usuario " & UserList(iUsuario).Name & " tiene un disco con el Serial " & UserList(iUsuario).flags.SerialHD, FONTTYPE_INFOBOLD)
-        End If
-       
-        Call .incomingData.CopyBuffer(buffer)
-       
-    End With
-   
-ErrHandler:
-    Dim error As Long
-    error = Err.Number
-On Error GoTo 0
-    
-    'Destroy auxiliar buffer
-    Set buffer = Nothing
-    
-    If error <> 0 Then Err.Raise error
-    
-End Sub
- 
-''
-' Handles the "UnBanHD" message.
-'
-' @param    userIndex The index of the user sending the message.
-Private Sub HandleUnbanHD(ByVal UserIndex As Integer)
-'***************************************************
-'Author: ArzenaTh
-'Last Modification:  08/06/2012 - ^[GS]^
-'Maneja el unbaneo del serial del HD de un usuario.
-'***************************************************
- 
-    If UserList(UserIndex).incomingData.length < 3 Then
-        Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
-        Exit Sub
-    End If
- 
-On Error GoTo ErrHandler
-    With UserList(UserIndex)
-        Dim buffer As clsByteQueue: Set buffer = New clsByteQueue
-        Call buffer.CopyBuffer(.incomingData)
-        
-        'Remove packet ID
-        Call buffer.ReadByte
-               
-        Dim SerialHD As String
-        SerialHD = buffer.ReadASCIIString()
-       
-        If (BanHD_rem(SerialHD)) Then
-            Call WriteConsoleMsg(UserIndex, "El disco con el Serial " & SerialHD & " se ha quitado de la lista de baneados.", FONTTYPE_INFOBOLD)
-        Else
-            Call WriteConsoleMsg(UserIndex, "El disco con el Serial " & SerialHD & " no se encuentra en la lista de baneados.", FONTTYPE_INFO)
-        End If
-       
-        Call .incomingData.CopyBuffer(buffer)
-    End With
-ErrHandler:
-    Dim error As Long
-    error = Err.Number
-On Error GoTo 0
-    
-    'Destroy auxiliar buffer
-    Set buffer = Nothing
-    
-    If error <> 0 Then Err.Raise error
- 
-End Sub
- 
-''
-' Handles the "BanHD" message.
-'
-' @param    userIndex The index of the user sending the message.
-Private Sub HandleBanHD(ByVal UserIndex As Integer)
-'***************************************************
-'Author: ArzenaTh
-'Last Modification: 08/06/2012 - ^[GS]^
-'Maneja el baneo del serial del HD de un usuario.
-'***************************************************
- 
-    If UserList(UserIndex).incomingData.length < 3 Then
-        Err.Raise UserList(UserIndex).incomingData.NotEnoughDataErrCode
-        Exit Sub
-    End If
- 
-On Error GoTo ErrHandler
-    With UserList(UserIndex)
-        Dim buffer As clsByteQueue: Set buffer = New clsByteQueue
-        Call buffer.CopyBuffer(.incomingData)
-        
-        'Remove packet ID
-        Call buffer.ReadByte
-        
-        Dim i As Long
-        Dim iUsuario As Integer
-        Dim BannedHD As String
-        
-        iUsuario = NameIndex(buffer.ReadASCIIString())
-        If iUsuario > 0 Then
-            BannedHD = UserList(iUsuario).flags.SerialHD
-        End If
-        
-        If .flags.Privilegios And (PlayerType.Admin And PlayerType.Dios) Then
-            If LenB(BannedHD) > 0 Then
-                If BanHD_find(BannedHD) > 0 Then
-                    Call WriteConsoleMsg(UserIndex, "El usuario ya se encuentra baneado.", FontTypeNames.FONTTYPE_INFO)
-                Else
-                    Call BanHD_add(BannedHD)
-                    Call WriteConsoleMsg(UserIndex, "Has baneado el disco duro " & BannedHD & " del usuario " & UserList(iUsuario).Name, FontTypeNames.FONTTYPE_INFO)
-                    For i = 1 To LastUser
-                        If UserList(i).ConnIDValida Then
-                            If UserList(i).flags.SerialHD = BannedHD Then
-                                Call BanCharacter(UserIndex, UserList(i).Name, "Ban de serial de disco duro.")
-                            End If
-                        End If
-                    Next i
-                End If
-            ElseIf iUsuario <= 0 Then
-                Call WriteMensajes(UserIndex, eMensajes.Mensaje321) '"El personaje no está online."
-            End If
-        End If
-       
-        Call .incomingData.CopyBuffer(buffer)
-    End With
-   
 ErrHandler:
     Dim error As Long
     error = Err.Number
@@ -18100,24 +18025,18 @@ End Sub
 Public Sub WriteDiceRoll(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 02/08/2012 - ^[GS]^
+'Last Modification: 26/02/2022 - ^[GS]^
 'Writes the "DiceRoll" message to the given user's outgoing data buffer
 '***************************************************
 On Error GoTo ErrHandler
     With UserList(UserIndex).outgoingData
         Call .WriteByte(ServerPacketID.DiceRoll)
         
-        Call .WriteByte(UserList(UserIndex).Stats.UserAtributos(eAtributos.Fuerza))
-        Call .WriteByte(UserList(UserIndex).Stats.UserAtributos(eAtributos.Agilidad))
-        Call .WriteByte(UserList(UserIndex).Stats.UserAtributos(eAtributos.Inteligencia))
-        Call .WriteByte(UserList(UserIndex).Stats.UserAtributos(eAtributos.Carisma))
-        Call .WriteByte(UserList(UserIndex).Stats.UserAtributos(eAtributos.Constitucion))
-        
-        ' GSZAO - Es hora del captcha!
-        Call .WriteByte(UserList(UserIndex).flags.CaptchaCode(0) Xor UserList(UserIndex).flags.CaptchaKey)
-        Call .WriteByte(UserList(UserIndex).flags.CaptchaCode(1) Xor UserList(UserIndex).flags.CaptchaKey)
-        Call .WriteByte(UserList(UserIndex).flags.CaptchaCode(2) Xor UserList(UserIndex).flags.CaptchaKey)
-        Call .WriteByte(UserList(UserIndex).flags.CaptchaCode(3) Xor UserList(UserIndex).flags.CaptchaKey)
+        Call .WriteByte(UserList(UserIndex).flags.AccountDices(eAtributos.Fuerza))
+        Call .WriteByte(UserList(UserIndex).flags.AccountDices(eAtributos.Agilidad))
+        Call .WriteByte(UserList(UserIndex).flags.AccountDices(eAtributos.Inteligencia))
+        Call .WriteByte(UserList(UserIndex).flags.AccountDices(eAtributos.Carisma))
+        Call .WriteByte(UserList(UserIndex).flags.AccountDices(eAtributos.Constitucion))
 
     End With
 Exit Sub
@@ -18450,7 +18369,7 @@ End Sub
 ' @param    criminalsKilled The number of criminals killed by the requested char.
 ' @remarks  The data is not actually sent until the buffer is properly flushed.
 
-Public Sub WriteCharacterInfo(ByVal UserIndex As Integer, ByVal charName As String, ByVal Race As eRaza, ByVal Class As eClass, ByVal Gender As eGenero, ByVal level As Byte, ByVal gold As Long, ByVal bank As Long, ByVal reputation As Long, ByVal previousPetitions As String, ByVal currentGuild As String, ByVal previousGuilds As String, ByVal RoyalArmy As Boolean, ByVal CaosLegion As Boolean, ByVal citicensKilled As Long, ByVal criminalsKilled As Long)
+Public Sub WriteCharacterInfo(ByVal UserIndex As Integer, ByVal charName As String, ByVal Race As eRaza, ByVal Class As eClass, ByVal Gender As eGenero, ByVal Level As Byte, ByVal Gold As Long, ByVal bank As Long, ByVal reputation As Long, ByVal previousPetitions As String, ByVal currentGuild As String, ByVal previousGuilds As String, ByVal RoyalArmy As Boolean, ByVal CaosLegion As Boolean, ByVal citicensKilled As Long, ByVal criminalsKilled As Long)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
 'Last Modification: 05/17/06
@@ -18465,8 +18384,8 @@ On Error GoTo ErrHandler
         Call .WriteByte(Class)
         Call .WriteByte(Gender)
         
-        Call .WriteByte(level)
-        Call .WriteLong(gold)
+        Call .WriteByte(Level)
+        Call .WriteLong(Gold)
         Call .WriteLong(bank)
         Call .WriteLong(reputation)
         
@@ -19221,7 +19140,7 @@ End Sub
 Public Sub FlushBuffer(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Juan Martín Sotuyo Dodero (Maraxus)
-'Last Modification: 05/17/06
+'Last Modification: 01/03/2022 - ^[GS]^
 'Sends all data existing in the buffer
 '***************************************************
     Dim sndData As String

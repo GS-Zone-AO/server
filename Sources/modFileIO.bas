@@ -1305,7 +1305,6 @@ Sub LoadUserInit(ByVal UserIndex As Integer, ByRef UserFile As clsIniManager)
             .FormYesNoA = 0
             .FormYesNoDE = 0
             .FormYesNoType = 0
-            '.SerialHD = val(UserFile.GetValue("FLAGS", "SerialHD")) 'GSZAO
         End With
         
         If .flags.Paralizado = 1 Then
@@ -1910,6 +1909,10 @@ Sub LoadSini()
     If LenB(sTemp) Then
         pathLogs = ValidDirectory(pathServer & sTemp)
     End If
+    sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathAccounts") ' GSZAO
+    If LenB(sTemp) Then
+        pathAccounts = ValidDirectory(pathServer & sTemp)
+    End If
     sTemp = GetVar(pathServer & fileServerIni, "PATHS", "PathChars") ' GSZAO
     If LenB(sTemp) Then
         pathChars = ValidDirectory(pathServer & sTemp)
@@ -1934,6 +1937,9 @@ Sub LoadSini()
     ' Control de directorios
     If Not FileExist(pathLogs, vbDirectory) Then
         Call MkDir(pathLogs)
+    End If
+    If Not FileExist(pathAccounts, vbDirectory) Then
+        Call MkDir(pathAccounts)
     End If
     If Not FileExist(pathChars, vbDirectory) Then
         Call MkDir(pathChars)
@@ -2235,7 +2241,6 @@ With UserList(UserIndex)
     
     'Matrix
     Call Manager.ChangeValue("FLAGS", "LastMap", CStr(.flags.lastMap))
-    Call Manager.ChangeValue("FLAGS", "SerialHD", CStr(.flags.SerialHD)) 'GSZAO
     
     Call Manager.ChangeValue("CONSEJO", "PERTENECE", IIf(.flags.Privilegios And PlayerType.RoyalCouncil, "1", "0"))
     Call Manager.ChangeValue("CONSEJO", "PERTENECECAOS", IIf(.flags.Privilegios And PlayerType.ChaosCouncil, "1", "0"))
@@ -2300,17 +2305,17 @@ With UserList(UserIndex)
     
     'First time around?
     If Manager.GetValue("INIT", "LastIP1") = vbNullString Then
-        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & ":" & time)
+        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & " " & time)
     'Is it a different ip from last time?
     ElseIf .ip <> Left$(Manager.GetValue("INIT", "LastIP1"), InStr(1, Manager.GetValue("INIT", "LastIP1"), " ") - 1) Then
         Dim i As Integer
         For i = 5 To 2 Step -1
             Call Manager.ChangeValue("INIT", "LastIP" & i, Manager.GetValue("INIT", "LastIP" & CStr(i - 1)))
         Next i
-        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & ":" & time)
+        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & " " & time)
     'Same ip, just update the date
     Else
-        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & ":" & time)
+        Call Manager.ChangeValue("INIT", "LastIP1", .ip & " - " & Date & " " & time)
     End If
     
     Call Manager.ChangeValue("INIT", "Position", .Pos.Map & "-" & .Pos.X & "-" & .Pos.Y)

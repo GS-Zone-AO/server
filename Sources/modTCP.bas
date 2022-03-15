@@ -242,13 +242,8 @@ On Error GoTo ErrHandler
         
         .flags.AccountLogged = False
         If .flags.UserLogged Then
-            If NumUsers > 0 Then NumUsers = NumUsers - 1
-            'Actualizo el frmMain. / maTih.-  |  02/03/2012
-            If frmMain.Visible Then frmMain.Escuch.Caption = CStr(NumUsers)
-            
             Call CloseUser(UserIndex)
-            
-            'Call EstadisticasWeb.Informar(CANTIDAD_ONLINE, NumUsers)
+            Call CountOnline
         Else
             Call ResetUserSlot(UserIndex)
         End If
@@ -306,8 +301,8 @@ On Error GoTo ErrHandler
 
     UserList(UserIndex).flags.AccountLogged = False
     If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers <> 0 Then NumUsers = NumUsers - 1
-            Call CloseUser(UserIndex)
+        Call CloseUser(UserIndex)
+        Call CountOnline
     End If
 
     frmMain.Socket2(UserIndex).Cleanup
@@ -354,9 +349,9 @@ Dim CoNnEcTiOnId As Long
 
     UserList(UserIndex).flags.AccountLogged = False
     If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers <> 0 Then NumUsers = NumUsers - 1
-            NURestados = True
-            Call CloseUser(UserIndex)
+        NURestados = True
+        Call CloseUser(UserIndex)
+        Call CountOnline
     End If
     
     Call ResetUserSlot(UserIndex)
@@ -376,9 +371,6 @@ ErrHandler:
     
     If Not NURestados Then
         If UserList(UserIndex).flags.UserLogged Then
-            If NumUsers > 0 Then
-                NumUsers = NumUsers - 1
-            End If
             Call LogError("Cerre sin grabar a: " & UserList(UserIndex).Name)
         End If
     End If
@@ -545,10 +537,10 @@ ValidateSkills = True
     
 End Function
 
-Sub ConnectNewUser(ByVal UserIndex As Integer, ByRef Name As String, ByRef Password As String, ByVal UserRaza As eRaza, ByVal UserSexo As eGenero, ByVal UserClase As eClass, ByRef UserEmail As String, ByVal Hogar As Byte, ByVal Head As Integer, ByVal SerialHD As String)
+Sub ConnectNewUser(ByVal UserIndex As Integer, ByRef Name As String, ByVal UserRaza As eRaza, ByVal UserSexo As eGenero, ByVal UserClase As eClass, ByVal Head As Integer)
 '*************************************************
 'Author: Unknownn
-'Last modified: 18/03/2013 - ^[GS]^
+'Last modified: 01/03/2022 - ^[GS]^
 '*************************************************
 Dim i As Long
 
@@ -559,13 +551,16 @@ With UserList(UserIndex)
         Exit Sub
     End If
     
+    If modAccounts.NumberOfCharacters(UserList(UserIndex).AccountHash) >= MaxCharPerAccount Then
+        Call WriteErrorMsg(UserIndex, "Debes borrar personajes para poder crear nuevos.")
+        Exit Sub
+    End If
+    
     If UserList(UserIndex).flags.UserLogged Then
-        Call LogCheating("El usuario " & UserList(UserIndex).Name & " ha intentado crear a " & Name & " desde la IP " & UserList(UserIndex).ip)
-        
-        'Kick player ( and leave character inside :D )!
+        Call LogCheating("El usuario " & UserList(UserIndex).AccountName & " ha intentado crear a " & Name & " desde la IP " & UserList(UserIndex).ip)
         Call CloseSocketSL(UserIndex)
         Call Cerrar_Usuario(UserIndex)
-        
+    
         Exit Sub
     End If
        
@@ -587,9 +582,8 @@ With UserList(UserIndex)
     #End If
     '¿Existe el personaje? (Fedudok)
     
-    
     'Tiró los dados antes de llegar acá??
-    If .Stats.UserAtributos(eAtributos.Fuerza) = 0 Then
+    If .flags.AccountDices(eAtributos.Fuerza) = 0 Then
         Call WriteErrorMsg(UserIndex, "Debe tirar los dados antes de poder crear un personaje.")
         Exit Sub
     End If
@@ -606,7 +600,6 @@ With UserList(UserIndex)
     .flags.FormYesNoType = 0 ' GSZAO
     .flags.FormYesNoA = 0 ' GSZAO
     .flags.FormYesNoDE = 0 ' GSZAO
-    .flags.SerialHD = SerialHD ' GSZAO
     
     .Reputacion.AsesinoRep = 0
     .Reputacion.BandidoRep = 0
@@ -617,19 +610,17 @@ With UserList(UserIndex)
     
     .Reputacion.Promedio = 30 / 6
     
-    
     .Name = Name
     .clase = UserClase
     .raza = UserRaza
     .Genero = UserSexo
-    .Hogar = Hogar
     
     '[Pablo (Toxic Waste) 9/01/08]
-    .Stats.UserAtributos(eAtributos.Fuerza) = .Stats.UserAtributos(eAtributos.Fuerza) + ModRaza(UserRaza).Fuerza
-    .Stats.UserAtributos(eAtributos.Agilidad) = .Stats.UserAtributos(eAtributos.Agilidad) + ModRaza(UserRaza).Agilidad
-    .Stats.UserAtributos(eAtributos.Inteligencia) = .Stats.UserAtributos(eAtributos.Inteligencia) + ModRaza(UserRaza).Inteligencia
-    .Stats.UserAtributos(eAtributos.Carisma) = .Stats.UserAtributos(eAtributos.Carisma) + ModRaza(UserRaza).Carisma
-    .Stats.UserAtributos(eAtributos.Constitucion) = .Stats.UserAtributos(eAtributos.Constitucion) + ModRaza(UserRaza).Constitucion
+    .Stats.UserAtributos(eAtributos.Fuerza) = .flags.AccountDices(eAtributos.Fuerza) + ModRaza(UserRaza).Fuerza
+    .Stats.UserAtributos(eAtributos.Agilidad) = .flags.AccountDices(eAtributos.Agilidad) + ModRaza(UserRaza).Agilidad
+    .Stats.UserAtributos(eAtributos.Inteligencia) = .flags.AccountDices(eAtributos.Inteligencia) + ModRaza(UserRaza).Inteligencia
+    .Stats.UserAtributos(eAtributos.Carisma) = .flags.AccountDices(eAtributos.Carisma) + ModRaza(UserRaza).Carisma
+    .Stats.UserAtributos(eAtributos.Constitucion) = .flags.AccountDices(eAtributos.Constitucion) + ModRaza(UserRaza).Constitucion
     '[/Pablo (Toxic Waste)]
     
     For i = 1 To NUMSKILLS
@@ -640,7 +631,6 @@ With UserList(UserIndex)
     .Stats.SkillPts = 10
     
     .Char.heading = eHeading.SOUTH
-    
     Call DarCuerpo(UserIndex)
     .Char.Head = Head
     
@@ -658,13 +648,11 @@ With UserList(UserIndex)
     .Stats.MaxSta = 20 * MiInt
     .Stats.MinSta = 20 * MiInt
     
-    
     .Stats.MaxAGU = 100
     .Stats.MinAGU = 100
     
     .Stats.MaxHam = 100
     .Stats.MinHam = 100
-    
     
     '<-----------------MANA----------------------->
     If UserClase = eClass.Mage Then 'Cambio en mana inicial (ToxicWaste)
@@ -808,15 +796,17 @@ Call ResetFacciones(UserIndex)
 
 ' Guardado de personaje(Fedudok)
 #If Mysql = 0 Then
-    Call WriteVar(pathChars & UCase$(Name) & ".chr", "INIT", "Password", Password) 'grabamos el password aqui afuera, para no mantenerlo cargado en memoria
     Call SaveUser(UserIndex, pathChars & UCase$(Name) & ".chr")
+    If modAccounts.AddCharacterToAccount(UserIndex, Name) Then
+        Call LoadAccount(UserIndex)
+    End If
 #Else
     Call SaveUserSQL(UserIndex, True)
 #End If
 ' Guardado de personaje(Fedudok)
 
 'Open User
-Call ConnectUser(UserIndex, Name, Password, SerialHD)
+Call ConnectUser(UserIndex, Name)
   
 End Sub
 
@@ -864,10 +854,14 @@ End Sub
 Public Function EnviarDatosASlot(ByVal UserIndex As Integer, ByRef Datos As String) As Long
 '***************************************************
 'Author: Unknownn
-'Last Modification: 15/10/2011 - ^[GS]^
+'Last Modification: 01/03/2022 - ^[GS]^
 'Last Modified By: Lucas Tavolaro Ortiz (Tavo)
 'Now it uses the clsByteQueue class and don`t make a FIFO Queue of String
 '***************************************************
+
+    #If Testeo Then
+        Debug.Print "SOCKET -> [" & UserIndex & "] " & Datos
+    #End If
 
 #If UsarQueSocket = 1 Then '**********************************************
     On Error GoTo Err
@@ -1009,71 +1003,7 @@ ValidateChr = UserList(UserIndex).Char.Head <> 0 And UserList(UserIndex).Char.Bo
 
 End Function
 
-Private Function GetHTMLSource(ByVal sURL As String) As String
-'***************************************************
-'Autor: ^[GS]^
-'Last Modification: 29/01/2022 - ^[GS]^
-'
-'***************************************************
-
-    Dim xmlHttp As Object
-
-    Set xmlHttp = CreateObject("MSXML2.XmlHttp")
-    xmlHttp.Open "GET", sURL, False
-    xmlHttp.send
-    GetHTMLSource = xmlHttp.responseText
-    Set xmlHttp = Nothing
-    
-End Function
-
-Public Function ConnectAccount(ByVal UserIndex As Integer, ByVal Token As String) As Boolean
-'***************************************************
-'Autor: ^[GS]^
-'Last Modification: 29/01/2022 - ^[GS]^
-'
-'***************************************************
-
-ConnectAccount = False ' Por defecto, es FALSE
-
-With UserList(UserIndex)
-
-    If .flags.AccountLogged Then
-        Call LogCheating("La cuenta " & .AccountName & " ha intentado loguear desde la IP " & .ip)
-        'Kick player ( and leave character inside :D )!
-        Call CloseSocketSL(UserIndex)
-        Call Cerrar_Usuario(UserIndex)
-        Exit Function
-    End If
-    
-    Dim sURL As String
-    Dim sGet As String
-    
-    sURL = "https://www.gs-zone.org/login_auth.php?&code=gszoneao&key=demo&token=" & Token
-    sGet = GetHTMLSource(sURL)
-    Dim sItems() As String
-    
-    Debug.Print sGet 'DEBUG
-
-    sItems = Split(sGet, ";")
-    If (UBound(sItems) + 1) <> 3 Then
-        Call WriteErrorMsg(UserIndex, "Token invalido. Vuelve a acceder para obtener un nuevo token.")
-        Call FlushBuffer(UserIndex)
-        Call CloseSocket(UserIndex)
-        Exit Function
-    End If
-    
-    .AccountID = CLng(sItems(0))
-    .AccountName = sItems(1)
-    .AccountHash = sItems(2)
-    .flags.AccountLogged = True
-    
-    ConnectAccount = True
-    
-End With
-
-End Function
-
-Public Function ConnectUser(ByVal UserIndex As Integer, ByRef Name As String, ByVal Password As String, ByVal SerialHD As String) As Boolean
+Public Function ConnectUser(ByVal UserIndex As Integer, ByRef Name As String) As Boolean
 '***************************************************
 'Autor: Unknown (orginal version)
 'Last Modification: 12/08/2014 - ^[GS]^
@@ -1086,15 +1016,33 @@ ConnectUser = False ' Por defecto, es FALSE
 
 With UserList(UserIndex)
 
+    If Not .flags.AccountLogged Then
+        Call WriteErrorMsg(UserIndex, "Debes iniciar sesión para ingresar con este personaje.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        Exit Function
+    End If
+
     If .flags.UserLogged Then
-        Call LogCheating("El usuario " & .Name & " ha intentado loguear a " & Name & " desde la IP " & .ip)
+        Call LogCheating("El usuario " & .AccountName & " ha intentado loguear a " & Name & " desde la IP " & .ip)
         'Kick player ( and leave character inside :D )!
         Call CloseSocketSL(UserIndex)
         Call Cerrar_Usuario(UserIndex)
         Exit Function
     End If
     
+    If Not IsCharInAccount(UserIndex, Name) Then
+        Call WriteErrorMsg(UserIndex, "El personaje no existe.")
+        Call FlushBuffer(UserIndex)
+        Call CloseSocket(UserIndex)
+        Exit Function
+    End If
+    
     'Reseteamos los FLAGS
+    For N = 1 To NUMATRIBUTOS
+        .flags.AccountDices(N) = 0
+    Next N
+    
     .flags.Escondido = 0
     .flags.TargetNPC = 0
     .flags.TargetNpcTipo = eNPCType.Comun
@@ -1103,7 +1051,6 @@ With UserList(UserIndex)
     .flags.FormYesNoType = 0 ' GSZAO
     .flags.FormYesNoA = 0 ' GSZAO
     .flags.FormYesNoDE = 0 ' GSZAO
-    .flags.SerialHD = SerialHD ' GSZ-AO
     .Char.FX = 0
     
     'Controlamos no pasar el maximo de usuarios
@@ -1124,27 +1071,9 @@ With UserList(UserIndex)
         End If
     End If
     
-   '¿Este HD ya esta conectado?
-    If iniMultiLogin = 0 Then ' GSZAO
-        If CheckForSameHD(UserIndex, SerialHD) = True Then
-            Call WriteErrorMsg(UserIndex, "No es posible usar más de un personaje al mismo tiempo.")
-            Call FlushBuffer(UserIndex)
-            Call CloseSocket(UserIndex)
-            Exit Function
-        End If
-    End If
-    
     '¿Existe el personaje?
     If Not FileExist(pathChars & UCase$(Name) & ".chr", vbNormal) Then
         Call WriteErrorMsg(UserIndex, "El personaje no existe.")
-        Call FlushBuffer(UserIndex)
-        Call CloseSocket(UserIndex)
-        Exit Function
-    End If
-       
-    '¿Es el passwd valido?
-    If UCase$(Password) <> UCase$(GetVar(pathChars & UCase$(Name) & ".chr", "INIT", "Password")) Then
-        Call WriteErrorMsg(UserIndex, "Password incorrecto.")
         Call FlushBuffer(UserIndex)
         Call CloseSocket(UserIndex)
         Exit Function
@@ -1408,14 +1337,13 @@ With UserList(UserIndex)
 
     Call UpdateUserInv(True, UserIndex, 0) ' Enviamos inventario de objetos
     Call UpdateUserHechizos(True, UserIndex, 0) ' Enviamos inventario de hechizos
-        
-    'Actualiza el Num de usuarios
-    NumUsers = NumUsers + 1
-    If frmMain.Visible Then frmMain.Escuch.Caption = CStr(NumUsers)
     
     ' Usuario logueado
     .flags.UserLogged = True
     Call WriteVar(pathChars & .Name & ".chr", "INIT", "Logged", "1")
+    
+    'Actualiza el Num de usuarios
+    Call CountOnline
     
     ' Usuarios en el mapa
     MapInfo(.Pos.Map).NumUsers = MapInfo(.Pos.Map).NumUsers + 1
@@ -1777,11 +1705,6 @@ Sub ResetUserFlags(ByVal UserIndex As Integer)
         .OldBody = 0
         .OldHead = 0
         .AdminInvisible = 0
-        .CaptchaKey = 0
-        .CaptchaCode(0) = 0
-        .CaptchaCode(1) = 0
-        .CaptchaCode(2) = 0
-        .CaptchaCode(3) = 0
         .Hechizo = 0
         .TimesWalk = 0
         .StartWalk = 0
@@ -1919,7 +1842,7 @@ End Sub
 Sub CloseUser(ByVal UserIndex As Integer)
 '***************************************************
 'Author: Unknownn
-'Last Modification: 11/08/2014 - ^[GS]^
+'Last Modification: 01/03/2022 - ^[GS]^
 '
 '***************************************************
 
@@ -1968,7 +1891,10 @@ With UserList(UserIndex)
     .Char.loops = 0
     Call SendData(SendTarget.ToPCArea, UserIndex, PrepareMessageCreateFX(.Char.CharIndex, 0, 0))
     
-    .flags.AccountLogged = False
+    For aN = 1 To NUMATRIBUTOS
+        .flags.AccountDices(aN) = 0
+    Next aN
+    
     .flags.UserLogged = False
     .Counters.Saliendo = False
     
@@ -2025,7 +1951,8 @@ With UserList(UserIndex)
     ' Si el usuario habia dejado un msg en la gm's queue lo borramos
     If Ayuda.Existe(.Name) Then Call Ayuda.Quitar(.Name)
     
-    Call ResetUserSlot(UserIndex)
+    Call CountOnline
+    Call modAccounts.LoadAccount(UserIndex)
     
     N = FreeFile(1)
     Open App.Path & "\logs\Connect.log" For Append Shared As #N

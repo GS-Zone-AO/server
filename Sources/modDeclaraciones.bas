@@ -656,6 +656,25 @@ Public Const ELU_SKILL_INICIAL As Byte = 200
 Public Const EXP_ACIERTO_SKILL As Byte = 50
 Public Const EXP_FALLO_SKILL As Byte = 20
 
+'CHOTS | Accounts
+Public Type AccountUser
+    Name As String
+    Body As Integer
+    Head As Integer
+    Weapon As Integer
+    Shield As Integer
+    Helmet As Integer
+    Class As Byte
+    Race As Byte
+    Map As String ' 1-50-50
+    Level As Byte
+    Gold As Long
+    LastConnect As String ' 01/03/2022:1:46:08
+    Criminal As Boolean
+    Dead As Boolean
+    GameMaster As Boolean
+End Type
+
 ' **************************************************************
 ' **************************************************************
 ' ************************ TIPOS *******************************
@@ -1167,6 +1186,7 @@ End Type
 Public Type UserFlags
     'Cuentas
     AccountLogged As Boolean '¿Esta online la cuenta?
+    AccountDices(1 To NUMATRIBUTOS) As Byte
     'Char
     UserLogged As Boolean '¿Esta online con un pj?
     Muerto As Byte '¿Esta muerto?
@@ -1238,9 +1258,6 @@ Public Type UserFlags
     Privilegios As PlayerType
     PrivEspecial As Boolean     ' 0.13.3
     
-    CaptchaCode(3) As Byte      ' GSZAO
-    CaptchaKey As Byte          ' GSZAO
-    
     LastCrimMatado As String
     LastCiudMatado As String
     
@@ -1285,7 +1302,6 @@ Public Type UserFlags
     FormYesNoType As Byte   ' tipo de form enviado
     FormYesNoA As Integer   ' envio form
     FormYesNoDE As Integer  ' responde form
-    SerialHD As Long
 End Type
 
 Public Type UserCounters
@@ -1723,6 +1739,7 @@ Public iniRecord As Long
 'Directorios
 Public pathServer As String 'Ruta base del server, en donde esta el "Server.ini"
 Public pathLogs As String 'Ruta base de los Logs
+Public pathAccounts As String 'Ruta base para guardar los accounts
 Public pathChars As String 'Ruta base para guardar los chars
 Public pathDats As String 'Ruta base para los DATs
 Public pathGuilds As String 'Ruta base para los Guilds/Clanes

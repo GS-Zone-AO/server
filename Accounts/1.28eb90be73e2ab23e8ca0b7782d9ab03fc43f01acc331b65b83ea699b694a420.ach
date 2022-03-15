@@ -1,0 +1,17 @@
+[INIT]
+ID=1
+Account=^[GS]^
+LastIP=127.0.0.1
+CantidadPersonajes=11
+[PERSONAJES]
+Personaje1=PEDRITO
+Personaje2=JOSESITO
+Personaje3=PRUEBIN
+Personaje4=HELLO
+Personaje5=LULO
+Personaje6=hidE
+Personaje7=Ger
+Personaje8=Chuzz
+Personaje9=VELVET
+Personaje10=asasasassa
+Personaje11=AygronLive

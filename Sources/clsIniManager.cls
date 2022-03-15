@@ -70,7 +70,7 @@ Option Base 0
 
 Private Type ChildNode
     key As String
-    value As String
+    Value As String
 End Type
 
 ''
@@ -143,6 +143,7 @@ Public Sub Initialize(ByVal File As String)
 'Last Modify Date: 27/07/2006
 'Opens the requested file and loads it's data into memory
 '**************************************************************
+On Error GoTo ErrorHandler
     Dim handle As Integer
     Dim Text As String
     Dim Pos As Long
@@ -182,7 +183,7 @@ Public Sub Initialize(ByVal File As String)
                             'Add it to the main node's value
                             ReDim Preserve .values(.numValues) As ChildNode
                             
-                            .values(.numValues).value = Right$(Text, Len(Text) - Pos)
+                            .values(.numValues).Value = Right$(Text, Len(Text) - Pos)
                             .values(.numValues).key = UCase$(Left$(Text, Pos - 1))
                             
                             .numValues = .numValues + 1
@@ -207,6 +208,11 @@ Public Sub Initialize(ByVal File As String)
                 Call SortChildNodes(fileData(i), 0, fileData(i).numValues - 1)
         Next i
     End If
+    
+    Exit Sub
+ErrorHandler:
+    MsgBox "A ocurrido un error en clsIniManager " & File & ": " & Err.Number & " " & Err.description
+    
 End Sub
 
 ''
@@ -322,7 +328,7 @@ Public Function GetValue(ByVal Main As String, ByVal key As String) As String
         j = FindKey(fileData(i), UCase$(key))
         
         'If we found it we return it
-        If j >= 0 Then GetValue = fileData(i).values(j).value
+        If j >= 0 Then GetValue = fileData(i).values(j).Value
     End If
 End Function
 
@@ -333,7 +339,7 @@ End Function
 ' @param    key The key of the value we are looking for.
 ' @returns  The value asociated with the given key under the requeted main section of the INI file or a null string if it's not found.
 
-Public Sub ChangeValue(ByVal Main As String, ByVal key As String, ByVal value As String)
+Public Sub ChangeValue(ByVal Main As String, ByVal key As String, ByVal Value As String)
 '**************************************************************
 'Author: ZaMa
 'Last Modify Date: 27/05/2009
@@ -351,10 +357,10 @@ Public Sub ChangeValue(ByVal Main As String, ByVal key As String, ByVal value As
     j = FindKey(fileData(i), UCase$(key))
     
     If j < 0 Then
-        Call AddKey(Main, key, value)
+        Call AddKey(Main, key, Value)
     Else
         'If we found it we change it
-        fileData(i).values(j).value = value
+        fileData(i).values(j).Value = Value
     End If
 End Sub
 
@@ -486,7 +492,7 @@ MainNodes = MainNodes + 1
 AddNode = MainPos
 End Function
 
-Private Function AddKey(ByRef Main As String, ByRef key As String, Optional ByRef value As String = vbNullString) As Long
+Private Function AddKey(ByRef Main As String, ByRef key As String, Optional ByRef Value As String = vbNullString) As Long
 '**************************************************************
 'Author: Torres Patricio (Pato)
 'Last Modify Date: 10/10/2010
@@ -518,7 +524,7 @@ With fileData(MainPos)
     End If
     
     .values(KeyPos).key = key
-    .values(KeyPos).value = value
+    .values(KeyPos).Value = Value
     
     .numValues = .numValues + 1
 End With
@@ -545,7 +551,7 @@ Open File For Output As hFile
             Print #hFile, "[" & .Name & "]"
             
             For j = 0 To .numValues - 1
-                Print #hFile, .values(j).key & "=" & .values(j).value
+                Print #hFile, .values(j).key & "=" & .values(j).Value
             Next j
             
             Print #hFile, ""

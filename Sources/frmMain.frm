@@ -973,7 +973,7 @@ End Sub
 Private Sub GameTimer_Timer()
 '********************************************************
 'Author: Unknownn
-'Last Modification: 03/12/2012 - ^[GS]^
+'Last Modification: 27/02/2022 - ^[GS]^
 '
 '********************************************************
     Dim iUserIndex As Long
@@ -989,8 +989,9 @@ On Error GoTo hayerror
            'Conexion activa?
            If .ConnID <> -1 Then
                 '¿User valido?
-                
-                If .ConnIDValida And .flags.UserLogged Then
+                If .ConnIDValida And .flags.AccountLogged Then
+                    ' GSZAO Account logged
+                ElseIf .ConnIDValida And .flags.UserLogged Then
                     
                     '[Alejo-18-5]
                     bEnviarStats = False
@@ -1202,9 +1203,7 @@ If MsgBox("¿Está seguro que desea cargar el último backup del mundo?", vbYesNo, 
         Call CloseSocket(LoopC)
     Next
       
-    
     LastUser = 0
-    NumUsers = 0
     
     Call FreeNPCs
     Call FreeCharIndexes

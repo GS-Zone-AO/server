@@ -29,6 +29,24 @@ Attribute VB_Name = "modUserRecords"
 
 Option Explicit
 
+Public Sub CountOnline()
+
+    Dim CountUser As Integer
+    Dim LoopC As Integer
+    
+    CountUser = 0
+    For LoopC = 1 To iniMaxUsuarios
+        If UserList(LoopC).flags.AccountLogged = True And _
+            UserList(LoopC).flags.UserLogged = True Then
+            CountUser = CountUser + 1
+        End If
+    Next
+    
+    NumUsers = CountUser
+    If frmMain.Visible Then frmMain.Escuch.Caption = CStr(NumUsers)
+    
+End Sub
+
 Public Sub LoadRecords()
 '**************************************************************
 'Author: Amraphen

@@ -225,27 +225,27 @@ Public Sub PurgarPenas()
 End Sub
 
 
-Public Sub Encarcelar(ByVal UserIndex As Integer, ByVal Minutos As Long, Optional ByVal GmName As String = vbNullString)
+Public Sub Encarcelar(ByVal userIndex As Integer, ByVal Minutos As Long, Optional ByVal GmName As String = vbNullString)
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
 '
 '***************************************************
 
-    UserList(UserIndex).Counters.Pena = Minutos
+    UserList(userIndex).Counters.Pena = Minutos
     
     
-    Call WarpUserChar(UserIndex, Prision.Map, Prision.X, Prision.Y, True)
+    Call WarpUserChar(userIndex, Prision.Map, Prision.X, Prision.Y, True)
     
     If LenB(GmName) = 0 Then
-        Call WriteConsoleMsg(UserIndex, "Has sido encarcelado, deberás permanecer en la cárcel " & Minutos & " minutos.", FontTypeNames.FONTTYPE_INFO)
+        Call WriteConsoleMsg(userIndex, "Has sido encarcelado, deberás permanecer en la cárcel " & Minutos & " minutos.", FontTypeNames.FONTTYPE_INFO)
     Else
-        Call WriteConsoleMsg(UserIndex, GmName & " te ha encarcelado, deberás permanecer en la cárcel " & Minutos & " minutos.", FontTypeNames.FONTTYPE_INFO)
+        Call WriteConsoleMsg(userIndex, GmName & " te ha encarcelado, deberás permanecer en la cárcel " & Minutos & " minutos.", FontTypeNames.FONTTYPE_INFO)
     End If
-    If UserList(UserIndex).flags.Traveling = 1 Then
-        UserList(UserIndex).flags.Traveling = 0
-        UserList(UserIndex).Counters.goHome = 0
-        Call WriteMultiMessage(UserIndex, eMessages.CancelHome)
+    If UserList(userIndex).flags.Traveling = 1 Then
+        UserList(userIndex).flags.Traveling = 0
+        UserList(userIndex).Counters.goHome = 0
+        Call WriteMultiMessage(userIndex, eMessages.CancelHome)
     End If
 End Sub
 
@@ -263,29 +263,29 @@ On Error Resume Next
     End If
 End Sub
 
-Public Function BANCheck(ByVal Name As String) As Boolean
+Public Function BANCheck(ByVal name As String) As Boolean
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
 '
 '***************************************************
 
-    BANCheck = (val(GetVar(App.Path & "\charfile\" & Name & ".chr", "FLAGS", "Ban")) = 1)
+    BANCheck = (val(GetVar(App.Path & "\charfile\" & name & ".chr", "FLAGS", "Ban")) = 1)
 
 End Function
 
-Public Function PersonajeExiste(ByVal Name As String) As Boolean
+Public Function PersonajeExiste(ByVal name As String) As Boolean
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
 '
 '***************************************************
 
-    PersonajeExiste = FileExist(pathChars & UCase$(Name) & ".chr", vbNormal)
+    PersonajeExiste = FileExist(pathChars & UCase$(name) & ".chr", vbNormal)
 
 End Function
 
-Public Function UnBan(ByVal Name As String) As Boolean
+Public Function UnBan(ByVal name As String) As Boolean
 '***************************************************
 'Author: Unknownn
 'Last Modification: -
@@ -293,11 +293,11 @@ Public Function UnBan(ByVal Name As String) As Boolean
 '***************************************************
 
     'Unban the character
-    Call WriteVar(App.Path & "\charfile\" & Name & ".chr", "FLAGS", "Ban", "0")
+    Call WriteVar(pathChars & name & ".chr", "FLAGS", "Ban", "0")
     
     'Remove it from the banned people database
-    Call WriteVar(App.Path & "\logs\" & "BanDetail.dat", Name, "BannedBy", "NOBODY")
-    Call WriteVar(App.Path & "\logs\" & "BanDetail.dat", Name, "Reason", "NO REASON")
+    Call WriteVar(pathLogs & "BanDetail.dat", name, "BannedBy", "NOBODY")
+    Call WriteVar(pathLogs & "BanDetail.dat", name, "Reason", "NO REASON")
 End Function
 
 Public Function MD5ok(ByVal md5formateado As String) As Boolean
@@ -344,19 +344,19 @@ Public Function BanIpBuscar(ByVal ip As String) As Long
 '***************************************************
 
     Dim Dale As Boolean
-    Dim LoopC As Long
+    Dim loopC As Long
     
     Dale = True
-    LoopC = 1
-    Do While LoopC <= BanIPs.Count And Dale
-        Dale = (BanIPs.Item(LoopC) <> ip)
-        LoopC = LoopC + 1
+    loopC = 1
+    Do While loopC <= BanIPs.Count And Dale
+        Dale = (BanIPs.Item(loopC) <> ip)
+        loopC = loopC + 1
     Loop
     
     If Dale Then
         BanIpBuscar = 0
     Else
-        BanIpBuscar = LoopC - 1
+        BanIpBuscar = loopC - 1
     End If
 End Function
 
@@ -391,16 +391,16 @@ Public Sub SaveBanIP()
 
     Dim ArchivoBanIp As String
     Dim ArchN As Long
-    Dim LoopC As Long
+    Dim loopC As Long
     
     ArchivoBanIp = pathDats & "BanIps.dat"
     
     ArchN = FreeFile()
     Open ArchivoBanIp For Output As #ArchN
     
-    For LoopC = 1 To BanIPs.Count
-        Print #ArchN, BanIPs.Item(LoopC)
-    Next LoopC
+    For loopC = 1 To BanIPs.Count
+        Print #ArchN, BanIPs.Item(loopC)
+    Next loopC
     
     Close #ArchN
 
@@ -434,20 +434,20 @@ Public Sub LoadBanIP()
 End Sub
 
 
-Public Function UserDarPrivilegioLevel(ByVal Name As String) As PlayerType
+Public Function UserDarPrivilegioLevel(ByVal name As String) As PlayerType
 '***************************************************
 'Author: Unknownn
 'Last Modification: 03/02/07
 'Last Modified By: Juan Martín Sotuyo Dodero (Maraxus)
 '***************************************************
 
-    If EsAdmin(Name) Then
+    If EsAdmin(name) Then
         UserDarPrivilegioLevel = PlayerType.Admin
-    ElseIf EsDios(Name) Then
+    ElseIf EsDios(name) Then
         UserDarPrivilegioLevel = PlayerType.Dios
-    ElseIf EsSemiDios(Name) Then
+    ElseIf EsSemiDios(name) Then
         UserDarPrivilegioLevel = PlayerType.SemiDios
-    ElseIf EsConsejero(Name) Then
+    ElseIf EsConsejero(name) Then
         UserDarPrivilegioLevel = PlayerType.Consejero
     Else
         UserDarPrivilegioLevel = PlayerType.User
@@ -488,22 +488,22 @@ Public Sub BanCharacter(ByVal bannerUserIndex As Integer, ByVal UserName As Stri
                         Call WriteMensajes(bannerUserIndex, eMensajes.Mensaje019) '"El personaje ya se encuentra baneado."
                     Else
                         Call LogBanFromName(UserName, bannerUserIndex, Reason)
-                        Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg("Servidor> " & .Name & " ha baneado a " & UserName & ".", FontTypeNames.FONTTYPE_SERVER))
+                        Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg("Servidor> " & .name & " ha baneado a " & UserName & ".", FontTypeNames.FONTTYPE_SERVER))
                         
                         'ponemos el flag de ban a 1
                         Call WriteVar(pathChars & UserName & ".chr", "FLAGS", "Ban", "1")
                         'ponemos la pena
                         cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
                         Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
+                        Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
                         
                         If (userPriv And rank) = (.flags.Privilegios And rank) Then
                             .flags.Ban = 1
-                            Call SendData(SendTarget.ToAdmins, 0, PrepareMessageConsoleMsg(.Name & " banned by the server por bannear un Administrador.", FontTypeNames.FONTTYPE_FIGHT))
+                            Call SendData(SendTarget.ToAdmins, 0, PrepareMessageConsoleMsg(.name & " banned by the server por bannear un Administrador.", FontTypeNames.FONTTYPE_FIGHT))
                             Call CloseSocket(bannerUserIndex)
                         End If
                         
-                        Call LogGM(.Name, "BAN a " & UserName & ". Razón: " & Reason)
+                        Call LogGM(.name, "BAN a " & UserName & ". Razón: " & Reason)
                     End If
                 End If
             Else
@@ -515,25 +515,25 @@ Public Sub BanCharacter(ByVal bannerUserIndex As Integer, ByVal UserName As Stri
             Else
             
                 Call LogBan(tUser, bannerUserIndex, Reason)
-                Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg("Servidor> " & .Name & " ha baneado a " & UserList(tUser).Name & ".", FontTypeNames.FONTTYPE_SERVER))
+                Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg("Servidor> " & .name & " ha baneado a " & UserList(tUser).name & ".", FontTypeNames.FONTTYPE_SERVER))
                 
                 'Ponemos el flag de ban a 1
                 UserList(tUser).flags.Ban = 1
                 
                 If (UserList(tUser).flags.Privilegios And rank) = (.flags.Privilegios And rank) Then
                     .flags.Ban = 1
-                    Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg(.Name & " ha sido baneado del servidor por un Administrador.", FontTypeNames.FONTTYPE_FIGHT))
+                    Call SendData(SendTarget.ToAdminsButCounselorsAndRms, 0, PrepareMessageConsoleMsg(.name & " ha sido baneado del servidor por un Administrador.", FontTypeNames.FONTTYPE_FIGHT))
                     Call CloseSocket(bannerUserIndex)
                 End If
                 
-                Call LogGM(.Name, "BAN a " & UserName & ". Razón: " & Reason)
+                Call LogGM(.name, "BAN a " & UserName & ". Razón: " & Reason)
                 
                 'ponemos el flag de ban a 1
                 Call WriteVar(pathChars & UserName & ".chr", "FLAGS", "Ban", "1")
                 'ponemos la pena
                 cantPenas = val(GetVar(pathChars & UserName & ".chr", "PENAS", "Cant"))
                 Call WriteVar(pathChars & UserName & ".chr", "PENAS", "Cant", cantPenas + 1)
-                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.Name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
+                Call WriteVar(pathChars & UserName & ".chr", "PENAS", "P" & cantPenas + 1, LCase$(.name) & ": BAN POR " & LCase$(Reason) & " " & Date & " " & time)
                 
                 Call CloseSocket(tUser)
             End If
@@ -542,98 +542,3 @@ Public Sub BanCharacter(ByVal bannerUserIndex As Integer, ByVal UserName As Stri
 End Sub
 
 
-Public Function BanHD_rem(ByVal HD As String) As Boolean
-' GSZ-AO - Remueve un SerialHD como baneado
-
-   On Error Resume Next
- 
-    Dim N As Long
-   
-    N = BanHD_find(HD) ' buscar
-    If N > 0 Then
-        BanHDs.Remove N ' quitar
-        BanHD_save ' guardar los cambios
-        BanHD_rem = True
-    Else
-        BanHD_rem = False
-    End If
-   
-End Function
-Public Sub BanHD_add(ByVal HD As String)
-' GSZ-AO - Agrega un nuevo SerialHD como baneado
-
-    Dim N As Long
-   
-    N = BanHD_find(HD) ' buscar
-    If N > 0 Then
-        ' ya estaba
-    Else
-        BanHDs.Add HD ' agregar
-        Call BanHD_save ' guardar los cambios
-    End If
-    
-End Sub
-Public Function BanHD_find(ByVal HD As String) As Long
-' GSZ-AO - Busca si un SerialHD está baneado
-
-    Dim Dale As Boolean
-    Dim LoopC As Long
-   
-    Dale = True
-    LoopC = 1
-    Do While LoopC <= BanHDs.Count And Dale
-        Dale = (BanHDs.Item(LoopC) <> HD)
-        LoopC = LoopC + 1
-    Loop
-   
-    If Dale Then
-        BanHD_find = 0
-    Else
-        BanHD_find = LoopC - 1
-    End If
-    
-End Function
-Public Sub BanHD_save()
-' GSZ-AO - Guarda el listado de SerialHD's baneados
-On Error Resume Next
-    Dim ArchivoBanHD As String
-    Dim ArchN As Long
-    Dim LoopC As Long
-   
-    ArchivoBanHD = pathDats & "BanHDs.dat"
-       
-    ArchN = FreeFile()
-    Open ArchivoBanHD For Output As #ArchN
-   
-    For LoopC = 1 To BanHDs.Count
-        Print #ArchN, BanHDs.Item(LoopC)
-    Next LoopC
-   
-    Close #ArchN
-   
-End Sub
-Public Sub LoadBanHD()
-' GSZ-AO - Carga el listado de SerialHD's baneados
-On Error GoTo error
-
-    Dim ArchN As Long
-    Dim Tmp As String
-    Dim ArchivoBanHD As String
-   
-    ArchivoBanHD = pathDats & "BanHDs.dat"
-   
-    Set BanHDs = New Collection
-   
-    ArchN = FreeFile()
-    Open ArchivoBanHD For Input As #ArchN
-   
-    Do While Not EOF(ArchN)
-        Line Input #ArchN, Tmp
-        BanHDs.Add Tmp
-    Loop
-   
-    Close #ArchN
-    Exit Sub
-error:
-    MsgBox "Error ejecutando LoadBanHD Err " & Err.Number & ": " & Err.description
-End Sub
