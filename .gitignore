@@ -1,5 +1,7 @@
 Sources/*.log
 Sources/*.bak
+Accounts/*.ach
+Charfiles/*.chr
 *.exe
 *.obj
 *.log
